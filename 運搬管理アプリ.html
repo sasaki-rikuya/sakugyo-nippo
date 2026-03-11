@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>運搬管理表</title>
+<style>
+  :root {
+    --navy:#1F3864;--blue:#2E75B6;--lblue:#EAF3FB;
+    --green:#2E7D32;--lgreen:#E8F5E9;
+    --red:#C62828;--lred:#FFEBEE;
+    --orange:#E65100;--yellow:#FFF8E1;--ylbdr:#FFD54F;
+    --bg:#F0F4F8;--white:#fff;--gray:#90A4AE;
+    --border:#CFD8DC;--text:#1A237E;--sub:#546E7A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:120px}
+
+  /* ヘッダー */
+  header{background:linear-gradient(135deg,var(--navy),var(--blue));color:white;padding:14px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  header h1{font-size:1.1em;font-weight:700;letter-spacing:.05em}
+  header .subtitle{font-size:.75em;opacity:.85;margin-top:2px}
+
+  /* セクション */
+  .section{background:white;margin:10px 12px;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+  .sec-hdr{background:var(--navy);color:white;padding:9px 14px;font-size:.85em;font-weight:700;display:flex;align-items:center;gap:6px}
+  .sec-body{padding:12px 14px}
+
+  /* フォーム */
+  .field{margin-bottom:12px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-size:.78em;font-weight:700;color:var(--sub);margin-bottom:4px}
+  label .req{color:var(--red);margin-left:3px}
+  .fixed-val{font-size:.95em;font-weight:700;color:var(--navy);padding:10px 12px;background:var(--lblue);border-radius:8px}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:1em;font-family:inherit;background:white;color:var(--text);
+    appearance:none;-webkit-appearance:none;outline:none;transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23546E7A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:34px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .other-input{margin-top:6px;display:none}
+  .other-input.visible{display:block}
+
+  /* 点検テーブル */
+  .inspection-table{width:100%;border-collapse:collapse;font-size:.82em}
+  .inspection-table th{background:var(--navy);color:white;padding:7px 8px;text-align:left;font-weight:700}
+  .inspection-table th:last-child,.inspection-table th:nth-last-child(2),.inspection-table th:nth-last-child(3){text-align:center;width:56px}
+  .inspection-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .inspection-table tr:nth-child(even) td{background:#F8FBFF}
+  .insp-num{color:var(--blue);font-weight:700;margin-right:4px}
+
+  /* ラジオボタン点検 */
+  .insp-radio{display:flex;justify-content:center}
+  .insp-radio input[type=radio]{display:none}
+  .insp-radio label{display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:32px;border-radius:6px;border:1.5px solid var(--border);
+    cursor:pointer;font-size:.85em;font-weight:700;transition:all .15s;color:var(--sub);background:white}
+  .insp-radio input[type=radio]:checked + label.ok{background:#E8F5E9;border-color:#2E7D32;color:#2E7D32}
+  .insp-radio input[type=radio]:checked + label.ng{background:#FFEBEE;border-color:#C62828;color:#C62828}
+  .insp-radio input[type=radio]:checked + label.na{background:#F3F3F3;border-color:#90A4AE;color:#546E7A}
+
+  /* 積込・荷卸ボタンエリア */
+  .ops-section{background:white;margin:10px 12px;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+  .ops-body{padding:14px}
+  .warning-txt{color:var(--red);font-size:.8em;font-weight:700;text-align:center;
+    background:var(--lred);border:1px solid #FFCDD2;border-radius:8px;
+    padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .ops-btn{width:100%;padding:18px 8px;border:none;border-radius:10px;font-size:1em;font-weight:700;
+    font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .1s,opacity .1s}
+  .ops-btn:active{transform:scale(.97)}
+  .ops-btn.start{background:linear-gradient(135deg,#1565C0,#1E88E5);color:white;box-shadow:0 3px 10px rgba(21,101,192,.35)}
+  .ops-btn.end{background:linear-gradient(135deg,#C62828,#E53935);color:white;box-shadow:0 3px 10px rgba(198,40,40,.35)}
+  .ops-btn .btn-label{font-size:1.05em}
+  .ops-btn .btn-time{font-size:.8em;opacity:.85;min-height:1.2em}
+  .ops-btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* カウンター */
+  .counter-box{background:var(--navy);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:14px}
+  .counter-label{font-size:.8em;opacity:.8;margin-bottom:4px}
+  .counter-num{font-size:2.8em;font-weight:700;line-height:1}
+  .counter-unit{font-size:.85em;opacity:.8;margin-top:2px}
+  .counter-controls{display:flex;justify-content:center;gap:12px;margin-top:10px}
+  .counter-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    color:white;border-radius:8px;padding:6px 18px;font-size:1em;font-weight:700;
+    font-family:inherit;cursor:pointer}
+  .counter-btn:active{background:rgba(255,255,255,.25)}
+
+  /* 運搬履歴 */
+  .history-list{max-height:200px;overflow-y:auto}
+  .history-item{display:flex;align-items:center;gap:8px;padding:8px 10px;
+    border-bottom:1px solid var(--border);font-size:.82em}
+  .history-item:last-child{border-bottom:none}
+  .history-num{background:var(--blue);color:white;border-radius:50%;
+    width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+    font-size:.78em;font-weight:700;flex-shrink:0}
+  .history-detail{flex:1;color:var(--sub)}
+  .history-time{color:var(--navy);font-weight:700}
+
+  /* 送信ボタン */
+  .submit-bar{position:fixed;bottom:0;left:0;right:0;background:white;padding:12px 14px;box-shadow:0 -2px 12px rgba(0,0,0,.12);z-index:100}
+  .btn-submit{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#43A047);color:white;
+    border:none;border-radius:10px;font-size:1.05em;font-weight:700;font-family:inherit;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(46,125,50,.35)}
+  .btn-submit:disabled{opacity:.6;cursor:not-allowed}
+  .submit-hint{font-size:.73em;color:var(--sub);text-align:center;margin-top:5px}
+
+  /* モーダル */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-end;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:white;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:22px 18px 30px;max-height:80vh;overflow-y:auto;animation:slideUp .25s ease}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal h2{font-size:1.05em;color:var(--navy);margin-bottom:12px}
+  .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .btn-cancel{padding:12px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:inherit;font-size:.95em;font-weight:700;color:var(--sub);cursor:pointer}
+  .btn-confirm{padding:12px;border:none;border-radius:8px;background:var(--green);color:white;font-family:inherit;font-size:.95em;font-weight:700;cursor:pointer}
+  .preview-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.85em}
+  .preview-row:last-child{border-bottom:none}
+  .preview-key{color:var(--sub);font-weight:700}
+  .preview-val{color:var(--navy);font-weight:700;text-align:right;max-width:60%}
+
+  /* 完了画面 */
+  .done-screen{display:none;position:fixed;inset:0;background:var(--green);color:white;z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+  .done-screen.open{display:flex}
+  .done-icon{font-size:4.5em;margin-bottom:14px}
+  .done-screen h2{font-size:1.5em;margin-bottom:6px}
+  .done-screen p{opacity:.85;font-size:.9em;line-height:1.7;margin-bottom:24px;white-space:pre-wrap}
+  .btn-next{background:white;color:var(--green);border:none;border-radius:10px;padding:13px 28px;font-family:inherit;font-size:1em;font-weight:700;cursor:pointer}
+
+  .sending-txt{text-align:center;padding:10px;font-size:.88em;color:var(--blue);display:none}
+  .sending-txt.visible{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚛 ダンプトラック運搬管理表</h1>
+  <div class="subtitle">北海道新幹線 札樽トンネル（銭函）</div>
+</header>
+
+<!-- 工事情報（固定） -->
+<div class="section">
+  <div class="sec-hdr">📌 工事情報</div>
+  <div class="sec-body">
+    <div class="field"><label>工事名</label><div class="fixed-val">北海道新幹線 札樽トンネル（銭函）工事</div></div>
+    <div class="field"><label>請負者</label><div class="fixed-val">日吉建設㈱</div></div>
+  </div>
+</div>
+
+<!-- ドライバー情報 -->
+<div class="section">
+  <div class="sec-hdr">👤 ドライバー情報</div>
+  <div class="sec-body">
+    <div class="field">
+      <label>年月日<span class="req">*</span></label>
+      <input type="date" id="date">
+    </div>
+    <div class="field">
+      <label>所属会社<span class="req">*</span></label>
+      <input type="text" id="company" placeholder="所属会社名を入力">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>車両番号<span class="req">*</span></label>
+        <input type="text" id="vehicle" placeholder="例：札幌100あ1234">
+      </div>
+      <div class="field">
+        <label>氏名<span class="req">*</span></label>
+        <input type="text" id="drivername" placeholder="氏名を入力">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 出発前点検 -->
+<div class="section">
+  <div class="sec-hdr">✅ 出発前点検</div>
+  <div class="sec-body" style="padding:0">
+    <table class="inspection-table">
+      <thead>
+        <tr>
+          <th>点検項目</th>
+          <th>○</th>
+          <th>×</th>
+          <th>該当なし</th>
+        </tr>
+      </thead>
+      <tbody id="insp-tbody"></tbody>
+    </table>
+    <!-- その他自由入力 -->
+    <div style="padding:10px 14px 12px" id="insp-other-wrap" style="display:none">
+      <label style="font-size:.78em;font-weight:700;color:var(--sub);margin-bottom:4px;display:block">12. その他（内容を入力）</label>
+      <textarea id="insp-other-text" rows="2" placeholder="気になる点があれば入力してください" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.95em;font-family:inherit;outline:none;resize:vertical"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 運搬情報 -->
+<div class="section">
+  <div class="sec-hdr">📦 運搬情報</div>
+  <div class="sec-body">
+    <div class="field">
+      <label>積荷の種類<span class="req">*</span></label>
+      <select id="cargo" onchange="handleOther(this,'cargo-other')">
+        <option value="">選択してください</option>
+        <option>対策ズリ</option>
+        <option>無対策ズリ</option>
+        <option>吸着土</option>
+        <option>破砕ズリ</option>
+        <option>水銀ズリ</option>
+        <option>砕石</option>
+        <option>雪</option>
+        <option value="その他">その他</option>
+      </select>
+      <input type="text" id="cargo-other" class="other-input" placeholder="積荷の種類を入力">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>積込箇所<span class="req">*</span></label>
+        <select id="load-from" onchange="handleOther(this,'load-from-other')">
+          <option value="">選択</option>
+          <option>D地区</option>
+          <option>C地区</option>
+          <option>B地区</option>
+          <option>第二仮置き場</option>
+          <option>桂岡地区</option>
+          <option>天神地区</option>
+          <option>石倉地区</option>
+          <option value="その他">その他</option>
+        </select>
+        <input type="text" id="load-from-other" class="other-input" placeholder="場所を入力">
+      </div>
+      <div class="field">
+        <label>荷卸箇所<span class="req">*</span></label>
+        <select id="load-to" onchange="handleOther(this,'load-to-other')">
+          <option value="">選択</option>
+          <option>D地区</option>
+          <option>C地区</option>
+          <option>B地区</option>
+          <option>第二仮置き場</option>
+          <option>桂岡地区</option>
+          <option>天神地区</option>
+          <option>石倉地区</option>
+          <option value="その他">その他</option>
+        </select>
+        <input type="text" id="load-to-other" class="other-input" placeholder="場所を入力">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 積込・荷卸操作 -->
+<div class="ops-section">
+  <div class="sec-hdr">🚛 運搬操作</div>
+  <div class="ops-body">
+    <div class="warning-txt">⚠️ 走行中は操作しないでください</div>
+
+    <!-- カウンター -->
+    <div class="counter-box">
+      <div class="counter-label">本日の運搬回数</div>
+      <div class="counter-num" id="counter-num">0</div>
+      <div class="counter-unit">発</div>
+      <div class="counter-controls">
+        <button class="counter-btn" onclick="adjustCounter(-1)">－ 修正</button>
+        <button class="counter-btn" onclick="adjustCounter(1)">＋ 追加</button>
+      </div>
+    </div>
+
+    <!-- 積込・荷卸ボタン -->
+    <div class="ops-grid">
+      <div>
+        <button class="ops-btn start" id="btn-start" onclick="tapStart()">
+          <span class="btn-label">🟦 積込開始</span>
+          <span class="btn-time" id="start-time">－</span>
+        </button>
+      </div>
+      <div>
+        <button class="ops-btn end" id="btn-end" onclick="tapEnd()" disabled>
+          <span class="btn-label">🟥 荷卸終了</span>
+          <span class="btn-time" id="end-time">－</span>
+        </button>
+      </div>
+    </div>
+    <div class="warning-txt" style="margin-bottom:0">⚠️ 走行中は操作しないでください</div>
+
+    <!-- 運搬履歴 -->
+    <div style="margin-top:14px">
+      <div style="font-size:.8em;font-weight:700;color:var(--sub);margin-bottom:6px">運搬履歴</div>
+      <div class="history-list" id="history-list">
+        <div style="text-align:center;color:var(--gray);font-size:.82em;padding:12px">まだ記録がありません</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 送信バー -->
+<div class="submit-bar">
+  <button class="btn-submit" id="submit-btn" onclick="showPreview()">📤 この発を送信する</button>
+  <div class="submit-hint">積込開始→荷卸終了後に1発ずつ送信します</div>
+</div>
+
+<!-- 確認モーダル -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h2>📋 送信内容の確認</h2>
+    <div id="preview-content"></div>
+    <div class="sending-txt" id="sending-txt">⏳ 送信中...しばらくお待ちください</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btn-cancel" onclick="closeModal()">← 戻る</button>
+      <button class="btn-confirm" id="btn-confirm" onclick="doSubmit()">✅ 送信する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 完了画面 -->
+<div class="done-screen" id="done-screen">
+  <div class="done-icon">✅</div>
+  <h2 id="done-title">送信完了！</h2>
+  <p id="done-message"></p>
+  <button class="btn-next" onclick="nextTrip()">🚛 次の発を入力する</button>
+</div>
+
+<script>
+// ===========================
+// Google Apps Script URL（運搬管理専用シート用・後で設定）
+// ===========================
+const GAS_URL = 'YOUR_GAS_URL_HERE'; // ← 後でURLを設定
+
+// ===========================
+// 点検項目
+// ===========================
+const INSP_ITEMS = [
+  'タイヤの空気圧、き裂、損傷の有無',
+  'エンジンオイル量、油漏れの有無',
+  '冷却水は規定量入っているか、液漏れはないか',
+  '警報は鳴るか、バックブザーは鳴るか',
+  '始動、排気色は良いか、異常音はないか',
+  'ペダルの踏代は良いか、遊びは適当か',
+  '点灯は良いか、点滅は良いか',
+  'バックミラーの写影は良いか、破損はないか',
+  'ダンプ装置の作動は良いか、油漏れはないか',
+  '車検証は有るか、運転免許証は携帯しているか',
+];
+
+// 点検結果保存
+let inspResults = {};
+INSP_ITEMS.forEach((_, i) => inspResults[i] = '');
+inspResults['other'] = '';
+inspResults['other_text'] = '';
+
+// 運搬データ
+let tripCounter  = 0;
+let currentStart = '';
+let currentEnd   = '';
+let history      = [];
+let startLocked  = false; // 積込開始済みフラグ
+
+// ===========================
+// 初期化
+// ===========================
+window.onload = () => {
+  // 今日の日付
+  const t = new Date();
+  document.getElementById('date').value =
+    `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+
+  // 点検テーブル生成
+  const tbody = document.getElementById('insp-tbody');
+  INSP_ITEMS.forEach((item, i) => {
+    const num = i < 5 ? i+1 : i+2; // 7番欠番のため
+    tbody.innerHTML += `
+    <tr>
+      <td><span class="insp-num">${num}.</span>${item}</td>
+      <td>
+        <div class="insp-radio">
+          <input type="radio" name="insp-${i}" id="insp-${i}-ok" value="○" onchange="saveInsp(${i},this.value)">
+          <label for="insp-${i}-ok" class="ok">○</label>
+        </div>
+      </td>
+      <td>
+        <div class="insp-radio">
+          <input type="radio" name="insp-${i}" id="insp-${i}-ng" value="×" onchange="saveInsp(${i},this.value)">
+          <label for="insp-${i}-ng" class="ng">×</label>
+        </div>
+      </td>
+      <td>
+        <div class="insp-radio">
+          <input type="radio" name="insp-${i}" id="insp-${i}-na" value="該当なし" onchange="saveInsp(${i},this.value)">
+          <label for="insp-${i}-na" class="na">－</label>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  // 12番（その他）
+  tbody.innerHTML += `
+  <tr>
+    <td><span class="insp-num">12.</span>その他</td>
+    <td>
+      <div class="insp-radio">
+        <input type="radio" name="insp-other" id="insp-other-ok" value="○" onchange="saveInspOther('○')">
+        <label for="insp-other-ok" class="ok">○</label>
+      </div>
+    </td>
+    <td>
+      <div class="insp-radio">
+        <input type="radio" name="insp-other" id="insp-other-ng" value="×" onchange="saveInspOther('×')">
+        <label for="insp-other-ng" class="ng">×</label>
+      </div>
+    </td>
+    <td>
+      <div class="insp-radio">
+        <input type="radio" name="insp-other" id="insp-other-na" value="該当なし" onchange="saveInspOther('該当なし')">
+        <label for="insp-other-na" class="na">－</label>
+      </div>
+    </td>
+  </tr>`;
+};
+
+function saveInsp(idx, val) { inspResults[idx] = val; }
+
+function saveInspOther(val) {
+  inspResults['other'] = val;
+  const wrap = document.getElementById('insp-other-wrap');
+  if (val === '○' || val === '×') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    inspResults['other_text'] = '';
+    document.getElementById('insp-other-text').value = '';
+  }
+}
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'insp-other-text') inspResults['other_text'] = e.target.value;
+});
+
+// ===========================
+// その他プルダウン制御
+// ===========================
+function handleOther(sel, otherId) {
+  const el = document.getElementById(otherId);
+  el.classList.toggle('visible', sel.value === 'その他');
+  if (sel.value === 'その他') el.focus(); else el.value = '';
+}
+
+// ===========================
+// 積込開始・荷卸終了
+// ===========================
+function nowTime() {
+  const t = new Date();
+  return `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+}
+
+function tapStart() {
+  if (startLocked) {
+    if (!confirm('積込開始時刻を上書きしますか？')) return;
+  }
+  currentStart = nowTime();
+  currentEnd   = '';
+  startLocked  = true;
+  document.getElementById('start-time').textContent = currentStart;
+  document.getElementById('end-time').textContent   = '－';
+  document.getElementById('btn-end').disabled = false;
+  document.getElementById('btn-start').style.opacity = '.7';
+}
+
+function tapEnd() {
+  if (!currentStart) { alert('先に積込開始を押してください'); return; }
+  currentEnd = nowTime();
+  document.getElementById('end-time').textContent = currentEnd;
+  document.getElementById('btn-start').style.opacity = '1';
+}
+
+function adjustCounter(delta) {
+  tripCounter = Math.max(0, tripCounter + delta);
+  document.getElementById('counter-num').textContent = tripCounter;
+}
+
+// ===========================
+// バリデーション＆プレビュー
+// ===========================
+function getVal(id) { return document.getElementById(id)?.value.trim() || ''; }
+
+function getSelectOrOther(selId, otherId) {
+  const v = getVal(selId);
+  return v === 'その他' ? (getVal(otherId) || 'その他') : v;
+}
+
+function showPreview() {
+  if (!getVal('date'))       { alert('年月日を入力してください'); return; }
+  if (!getVal('company'))    { alert('所属会社を入力してください'); return; }
+  if (!getVal('vehicle'))    { alert('車両番号を入力してください'); return; }
+  if (!getVal('drivername')) { alert('氏名を入力してください'); return; }
+  if (!getVal('cargo'))      { alert('積荷の種類を選択してください'); return; }
+  if (!getVal('load-from'))  { alert('積込箇所を選択してください'); return; }
+  if (!getVal('load-to'))    { alert('荷卸箇所を選択してください'); return; }
+  if (!currentStart)         { alert('積込開始時刻を記録してください'); return; }
+  if (!currentEnd)           { alert('荷卸終了時刻を記録してください'); return; }
+
+  const cargo   = getSelectOrOther('cargo',     'cargo-other');
+  const from    = getSelectOrOther('load-from', 'load-from-other');
+  const to      = getSelectOrOther('load-to',   'load-to-other');
+
+  let html = '';
+  const rows = [
+    ['年月日',    getVal('date')],
+    ['所属会社',  getVal('company')],
+    ['車両番号',  getVal('vehicle')],
+    ['氏名',      getVal('drivername')],
+    ['積荷',      cargo],
+    ['積込箇所',  from],
+    ['荷卸箇所',  to],
+    ['積込開始',  currentStart],
+    ['荷卸終了',  currentEnd],
+    ['運搬回数',  `${tripCounter + 1}発目`],
+  ];
+  rows.forEach(([k,v]) => {
+    html += `<div class="preview-row"><span class="preview-key">${k}</span><span class="preview-val">${v}</span></div>`;
+  });
+
+  document.getElementById('preview-content').innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() {
+  if (document.getElementById('btn-confirm').disabled) return;
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+// ===========================
+// 送信
+// ===========================
+async function doSubmit() {
+  const btnConfirm = document.getElementById('btn-confirm');
+  const btnCancel  = document.getElementById('btn-cancel');
+  const sendingTxt = document.getElementById('sending-txt');
+
+  btnConfirm.disabled = true;
+  btnCancel.disabled  = true;
+  btnConfirm.textContent = '⏳ 送信中...';
+  sendingTxt.classList.add('visible');
+
+  const cargo = getSelectOrOther('cargo',     'cargo-other');
+  const from  = getSelectOrOther('load-from', 'load-from-other');
+  const to    = getSelectOrOther('load-to',   'load-to-other');
+
+  // 点検結果を文字列に
+  const inspSummary = INSP_ITEMS.map((item, i) => {
+    const num = i < 5 ? i+1 : i+2;
+    return `${num}.${item}：${inspResults[i]||'未選択'}`;
+  }).join('\n') + `\n12.その他：${inspResults['other']||'未選択'}` +
+    (inspResults['other_text'] ? `（${inspResults['other_text']}）` : '');
+
+  tripCounter++;
+  document.getElementById('counter-num').textContent = tripCounter;
+
+  const payload = {
+    date:        getVal('date'),
+    company:     getVal('company'),
+    vehicle:     getVal('vehicle'),
+    drivername:  getVal('drivername'),
+    cargo, from, to,
+    startTime:   currentStart,
+    endTime:     currentEnd,
+    tripCount:   tripCounter,
+    inspection:  inspSummary,
+    timestamp:   new Date().toISOString(),
+  };
+
+  let ok = false;
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:   JSON.stringify(payload),
+    });
+    ok = true;
+  } catch(e) {
+    console.error(e);
+  }
+
+  // 履歴に追加
+  history.push({ trip: tripCounter, start: currentStart, end: currentEnd, cargo, from, to });
+  renderHistory();
+
+  closeModal();
+  sendingTxt.classList.remove('visible');
+  btnConfirm.disabled = false;
+  btnCancel.disabled  = false;
+  btnConfirm.textContent = '✅ 送信する';
+
+  document.getElementById('done-title').textContent = ok ? `第${tripCounter}発 送信完了！` : `第${tripCounter}発 記録完了`;
+  document.getElementById('done-message').innerText =
+    `${getVal('date')} ${getVal('drivername')}\n${from} → ${to}（${cargo}）\n積込：${currentStart}　荷卸：${currentEnd}\n\n` +
+    (ok ? 'スプレッドシートに記録されました。' : '※送信に失敗しました。管理者にお知らせください。');
+  document.getElementById('done-screen').classList.add('open');
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (history.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:.82em;padding:12px">まだ記録がありません</div>';
+    return;
+  }
+  list.innerHTML = [...history].reverse().map(h => `
+    <div class="history-item">
+      <div class="history-num">${h.trip}</div>
+      <div class="history-detail">
+        <div class="history-time">${h.start} → ${h.end}</div>
+        <div>${h.from} → ${h.to}（${h.cargo}）</div>
+      </div>
+    </div>`).join('');
+}
+
+// ===========================
+// 次の発へ（ドライバー情報・点検結果は保持）
+// ===========================
+function nextTrip() {
+  document.getElementById('done-screen').classList.remove('open');
+  // 積込・荷卸をリセット
+  currentStart = '';
+  currentEnd   = '';
+  startLocked  = false;
+  document.getElementById('start-time').textContent = '－';
+  document.getElementById('end-time').textContent   = '－';
+  document.getElementById('btn-end').disabled = true;
+  document.getElementById('btn-start').style.opacity = '1';
+  // 荷種・場所はそのまま（変わらない場合が多い）
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
