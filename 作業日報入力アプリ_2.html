@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>作業日報 入力</title>
+<style>
+  :root {
+    --navy: #1F3864; --blue: #2E75B6; --lblue: #EAF3FB;
+    --green: #2E7D32; --orange: #E65100; --red: #C62828;
+    --bg: #F0F4F8; --white: #FFFFFF; --gray: #90A4AE;
+    --border: #CFD8DC; --text: #1A237E; --sub: #546E7A;
+    --extra-bg: #FFF8E1; --extra-border: #FFD54F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:110px; }
+
+  header { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; padding:16px 16px 14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.25); }
+  header h1 { font-size:1.15em; font-weight:700; letter-spacing:.05em; }
+  header .subtitle { font-size:.78em; opacity:.8; margin-top:2px; }
+
+  .section { background:white; margin:12px; border-radius:12px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.08); }
+  .section-header { background:var(--navy); color:white; padding:10px 16px; font-size:.88em; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .section-header .badge { background:rgba(255,255,255,.2); border-radius:10px; padding:1px 8px; font-size:.82em; }
+  .section-body { padding:14px 16px; }
+
+  .field { margin-bottom:14px; }
+  .field:last-child { margin-bottom:0; }
+  label { display:block; font-size:.8em; font-weight:700; color:var(--sub); margin-bottom:5px; letter-spacing:.03em; }
+  label .req { color:var(--red); margin-left:3px; }
+
+  input[type=text],input[type=date],input[type=number],select,textarea {
+    width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:8px;
+    font-size:1em; font-family:inherit; background:white; color:var(--text);
+    appearance:none; -webkit-appearance:none; outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus,select:focus,textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(46,117,182,.15); }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23546E7A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:36px; }
+  textarea { resize:vertical; min-height:64px; line-height:1.5; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  .other-input { margin-top:6px; display:none; }
+  .other-input.visible { display:block; }
+
+  /* 作業員カード */
+  .worker-card { border:1.5px solid var(--border); border-radius:10px; margin-bottom:14px; overflow:hidden; }
+  .worker-card:last-child { margin-bottom:0; }
+  .worker-card-header { background:var(--lblue); padding:9px 12px; display:flex; align-items:center; justify-content:space-between; }
+  .worker-num { background:var(--blue); color:white; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:.82em; font-weight:700; flex-shrink:0; }
+  .worker-name-preview { font-size:.9em; font-weight:700; color:var(--navy); margin-left:8px; flex:1; }
+  .btn-remove { background:none; border:none; color:var(--gray); font-size:1.4em; cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1; }
+  .btn-remove:active { color:var(--red); background:#FFEBEE; }
+  .worker-card-body { padding:12px; }
+
+  /* 追加手当 */
+  .extra-section { background:var(--extra-bg); border:1px solid var(--extra-border); border-radius:8px; padding:10px 12px; margin-top:12px; }
+  .extra-title { font-size:.78em; font-weight:700; color:#7B6000; margin-bottom:10px; }
+  .extra-section label { font-size:.75em; color:#7B6000; }
+  .extra-section input { background:white; border-color:var(--extra-border); padding:8px 10px; font-size:.92em; }
+  .extra-divider { border:none; border-top:1px dashed var(--extra-border); margin:10px 0 8px; }
+  .extra-free-title { font-size:.75em; font-weight:700; color:#7B6000; margin-bottom:6px; }
+  .extra-label-input { padding:6px 10px; font-size:.82em; border:1px dashed var(--extra-border); border-radius:6px; background:white; width:100%; font-family:inherit; color:var(--text); outline:none; margin-bottom:4px; }
+  .extra-label-input:focus { border-color:var(--blue); }
+
+  .btn-add { width:100%; padding:13px; border:2px dashed var(--blue); border-radius:10px; background:var(--lblue); color:var(--blue); font-size:.95em; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s,transform .1s; margin-top:12px; }
+  .btn-add:active { transform:scale(.98); background:#D0E8F7; }
+
+  .submit-bar { position:fixed; bottom:0; left:0; right:0; background:white; padding:12px 16px; box-shadow:0 -2px 12px rgba(0,0,0,.12); z-index:100; }
+  .btn-submit { width:100%; padding:16px; background:linear-gradient(135deg,var(--green),#43A047); color:white; border:none; border-radius:10px; font-size:1.1em; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 3px 10px rgba(46,125,50,.35); transition:transform .1s; }
+  .btn-submit:active { transform:scale(.99); }
+  .csv-hint { font-size:.75em; color:var(--sub); text-align:center; margin-top:5px; }
+
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:flex-end; justify-content:center; }
+  .modal-bg.open { display:flex; }
+  .modal { background:white; width:100%; max-width:500px; border-radius:16px 16px 0 0; padding:24px 20px 32px; max-height:85vh; overflow-y:auto; animation:slideUp .25s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal h2 { font-size:1.1em; color:var(--navy); margin-bottom:14px; }
+  .preview-table { width:100%; border-collapse:collapse; font-size:.8em; margin-bottom:16px; }
+  .preview-table th { background:var(--navy); color:white; padding:6px 8px; text-align:left; }
+  .preview-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+  .preview-table tr:nth-child(even) td { background:var(--lblue); }
+  .modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btn-cancel { padding:13px; border:1.5px solid var(--border); border-radius:8px; background:white; font-family:inherit; font-size:.95em; font-weight:700; color:var(--sub); cursor:pointer; }
+  .btn-confirm { padding:13px; border:none; border-radius:8px; background:var(--green); color:white; font-family:inherit; font-size:.95em; font-weight:700; cursor:pointer; }
+
+  .done-screen { display:none; position:fixed; inset:0; background:var(--green); color:white; z-index:300; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px; }
+  .done-screen.open { display:flex; }
+  .done-icon { font-size:5em; margin-bottom:16px; }
+  .done-screen h2 { font-size:1.6em; margin-bottom:8px; }
+  .done-screen p { opacity:.85; font-size:.95em; line-height:1.7; margin-bottom:28px; white-space:pre-wrap; }
+  .btn-next { background:white; color:var(--green); border:none; border-radius:10px; padding:14px 32px; font-family:inherit; font-size:1em; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 作業日報 入力</h1>
+  <div class="subtitle">北海道新幹線札樽トンネル（銭函）</div>
+</header>
+
+<div class="section">
+  <div class="section-header">📌 基本情報</div>
+  <div class="section-body">
+    <div class="row2">
+      <div class="field">
+        <label>日付<span class="req">*</span></label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="field">
+        <label>作業地区<span class="req">*</span></label>
+        <select id="area" onchange="handleAreaChange(this)">
+          <option value="">選択</option>
+          <option>張碓地区</option>
+          <option>桂岡地区</option>
+          <option>B地区</option>
+          <option>C地区</option>
+          <option>D地区</option>
+          <option value="その他">その他</option>
+        </select>
+        <input type="text" id="area-other" class="other-input" placeholder="地区名を入力">
+      </div>
+    </div>
+    <div class="field">
+      <label>作業概要（任意）</label>
+      <input type="text" id="overview" placeholder="例：B1区 除雪・重機作業">
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    👷 作業員
+    <span class="badge" id="worker-count-badge">0名</span>
+  </div>
+  <div class="section-body">
+    <div id="worker-list"></div>
+    <button class="btn-add" onclick="addWorker()">＋ 作業員を追加</button>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <button class="btn-submit" onclick="showPreview()">📤 確認して送信</button>
+  <div class="csv-hint">送信するとCSVがダウンロードされます。月次集計Excelに貼り付けてご使用ください。</div>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h2>📋 送信内容の確認</h2>
+    <div id="preview-content"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">← 戻る</button>
+      <button class="btn-confirm" onclick="submitData()">✅ 送信する</button>
+    </div>
+  </div>
+</div>
+
+<div class="done-screen" id="done-screen">
+  <div class="done-icon">✅</div>
+  <h2>送信完了！</h2>
+  <p id="done-message"></p>
+  <button class="btn-next" onclick="resetForm()">📋 次の日報を入力</button>
+</div>
+
+<script>
+const COMPANIES = [
+  '日吉建設㈱','大松建設工業','北旺工業','新勢商事','博翔工業',
+  '舘建設工業','下村総業','ｻﾀﾃ工業','KOBUSHI','リーテック',
+  'DOS','和幸','鶴間組','畠山興産','伊藤建設運輸','大興物流','その他'
+];
+const SHOKUSHU = ['土工','OP','DT','世話役','その他'];
+const FIXED_EXTRAS = [
+  {key:'shinya',  label:'深夜手当',  unit:'日'},
+  {key:'kyujitu', label:'休日出勤',  unit:'H'},
+  {key:'josetu',  label:'除雪手当',  unit:'日'},
+  {key:'kosoku',  label:'高速利用',  unit:'回'},
+];
+
+let workers = [], workerIdCounter = 0;
+
+window.onload = () => {
+  const t = new Date();
+  document.getElementById('date').value =
+    `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  addWorker();
+};
+
+function handleAreaChange(sel) {
+  const el = document.getElementById('area-other');
+  el.classList.toggle('visible', sel.value === 'その他');
+  if (sel.value === 'その他') el.focus(); else el.value = '';
+}
+
+function handleCompanyChange(sel, id) {
+  const el = document.getElementById(`co-other-${id}`);
+  el.classList.toggle('visible', sel.value === 'その他');
+  if (sel.value === 'その他') el.focus(); else el.value = '';
+}
+
+function addWorker() {
+  const id = workerIdCounter++;
+  workers.push({id});
+  renderWorkers();
+  setTimeout(() => {
+    const card = document.getElementById(`wcard-${id}`);
+    if (card) card.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 50);
+}
+
+function removeWorker(id) {
+  if (workers.length <= 1) return;
+  workers = workers.filter(w => w.id !== id);
+  renderWorkers();
+}
+
+function renderWorkers() {
+  const list = document.getElementById('worker-list');
+  list.innerHTML = workers.map((w, i) => buildCard(w, i+1)).join('');
+  document.getElementById('worker-count-badge').textContent = `${workers.length}名`;
+  list.querySelectorAll('input[data-namefield]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      e.target.closest('.worker-card').querySelector('.worker-name-preview').textContent =
+        e.target.value || '（未入力）';
+    });
+  });
+}
+
+function buildCard(w, num) {
+  const coOpts = COMPANIES.map(c => `<option>${c}</option>`).join('');
+  const shOpts = SHOKUSHU.map(s => `<option>${s}</option>`).join('');
+  const fixedHTML = FIXED_EXTRAS.map(ex => `
+    <div class="field">
+      <label>${ex.label}（${ex.unit}）</label>
+      <input type="number" min="0" step="1" placeholder="0" data-field="${ex.key}" data-id="${w.id}">
+    </div>`).join('');
+  const rmBtn = workers.length > 1
+    ? `<button class="btn-remove" onclick="removeWorker(${w.id})">×</button>` : '';
+
+  return `
+  <div class="worker-card" id="wcard-${w.id}">
+    <div class="worker-card-header">
+      <div class="worker-num">${num}</div>
+      <div class="worker-name-preview">（未入力）</div>
+      ${rmBtn}
+    </div>
+    <div class="worker-card-body">
+      <div class="field">
+        <label>会社名<span class="req">*</span></label>
+        <select data-field="company" data-id="${w.id}" onchange="handleCompanyChange(this,${w.id})">
+          <option value="">選択してください</option>${coOpts}
+        </select>
+        <input type="text" id="co-other-${w.id}" class="other-input" placeholder="会社名を入力"
+               data-field="company_other" data-id="${w.id}">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>氏名<span class="req">*</span></label>
+          <input type="text" data-namefield="1" data-field="name" data-id="${w.id}" placeholder="氏名を入力">
+        </div>
+        <div class="field">
+          <label>職種<span class="req">*</span></label>
+          <select data-field="shoku" data-id="${w.id}"><option value="">選択</option>${shOpts}</select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>人工（日）</label>
+          <input type="number" min="0" max="1" step="0.5" placeholder="1" data-field="niko" data-id="${w.id}">
+        </div>
+        <div class="field">
+          <label>車両</label>
+          <select data-field="car" data-id="${w.id}">
+            <option value="">－</option><option>○</option>
+          </select>
+        </div>
+      </div>
+      <div class="row3">
+        <div class="field">
+          <label>開始時刻</label>
+          <input type="text" placeholder="07:00" data-field="start" data-id="${w.id}">
+        </div>
+        <div class="field">
+          <label>終了時刻</label>
+          <input type="text" placeholder="17:00" data-field="end" data-id="${w.id}">
+        </div>
+        <div class="field">
+          <label>作業時間(H)</label>
+          <input type="number" min="0" max="24" step="0.5" placeholder="8" data-field="hours" data-id="${w.id}">
+        </div>
+      </div>
+      <div class="field">
+        <label>時間外(H)</label>
+        <input type="number" min="0" step="0.5" placeholder="0" data-field="jikanGai" data-id="${w.id}">
+      </div>
+      <div class="field">
+        <label>作業内容</label>
+        <textarea data-field="content" data-id="${w.id}" placeholder="例：B1区 除雪 重機作業" rows="2"></textarea>
+      </div>
+
+      <div class="extra-section">
+        <div class="extra-title">💴 追加手当</div>
+        <div class="row2">${fixedHTML}</div>
+        <hr class="extra-divider">
+        <div class="extra-free-title">自由入力項目（項目名と数量を入力）</div>
+        <div class="row2">
+          <div class="field">
+            <input type="text" class="extra-label-input" placeholder="項目名（例：特殊作業）"
+                   data-field="free1_label" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量"
+                   data-field="free1_val" data-id="${w.id}">
+          </div>
+          <div class="field">
+            <input type="text" class="extra-label-input" placeholder="項目名（例：資材運搬）"
+                   data-field="free2_label" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量"
+                   data-field="free2_val" data-id="${w.id}">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function get(field, id) {
+  const el = document.querySelector(`[data-field="${field}"][data-id="${id}"]`);
+  return el ? el.value.trim() : '';
+}
+
+function collectData() {
+  const areaVal = document.getElementById('area').value;
+  const area = areaVal === 'その他'
+    ? (document.getElementById('area-other').value.trim() || 'その他') : areaVal;
+  const date     = document.getElementById('date').value;
+  const overview = document.getElementById('overview').value.trim();
+
+  const rows = workers.map(w => {
+    const coSel = get('company', w.id);
+    const company = coSel === 'その他' ? (get('company_other', w.id) || 'その他') : coSel;
+    return {
+      date, area, overview, company,
+      name:     get('name', w.id),
+      shoku:    get('shoku', w.id),
+      niko:     get('niko', w.id) || '1',
+      car:      get('car', w.id),
+      start:    get('start', w.id),
+      end:      get('end', w.id),
+      hours:    get('hours', w.id),
+      jikanGai: get('jikanGai', w.id),
+      content:  get('content', w.id),
+      shinya:   get('shinya', w.id),
+      kyujitu:  get('kyujitu', w.id),
+      josetu:   get('josetu', w.id),
+      kosoku:   get('kosoku', w.id),
+      free1_label: get('free1_label', w.id),
+      free1_val:   get('free1_val', w.id),
+      free2_label: get('free2_label', w.id),
+      free2_val:   get('free2_val', w.id),
+    };
+  });
+  return {date, area, overview, rows};
+}
+
+function showPreview() {
+  const data = collectData();
+  if (!data.date) { alert('日付を入力してください'); return; }
+  if (!data.area) { alert('作業地区を選択してください'); return; }
+  if (data.rows.some(r => !r.company || !r.name || !r.shoku)) {
+    alert('会社名・氏名・職種は必須です。\n未入力の作業員があります。'); return;
+  }
+  let html = `<p style="font-size:.84em;color:var(--sub);margin-bottom:10px;">
+    📅 <strong>${data.date}</strong>　📍 ${data.area}　👷 ${data.rows.length}名</p>
+  <table class="preview-table">
+    <thead><tr><th>No</th><th>会社</th><th>氏名</th><th>職種</th><th>人工</th><th>時間外</th></tr></thead>
+    <tbody>`;
+  data.rows.forEach((r, i) => {
+    html += `<tr><td>${i+1}</td><td style="font-size:.88em">${r.company}</td>
+      <td>${r.name}</td><td>${r.shoku}</td><td>${r.niko}日</td><td>${r.jikanGai||'0'}H</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('preview-content').innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function submitData() {
+  const data = collectData();
+  closeModal();
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const headers = [
+    '日付','作業地区','会社名','氏名','職種','人工(日)',
+    '作業開始','作業終了','作業時間(H)','時間外(H)','車両','作業内容',
+    '深夜手当(日)','休日出勤(H)','除雪手当(日)','高速利用(回)',
+    '自由項目1名称','自由項目1数量','自由項目2名称','自由項目2数量','作業概要'
+  ];
+  const rows = [headers.join(',')];
+  data.rows.forEach(r => rows.push([
+    r.date, r.area, esc(r.company), esc(r.name), r.shoku, r.niko,
+    r.start, r.end, r.hours, r.jikanGai, r.car, esc(r.content),
+    r.shinya, r.kyujitu, r.josetu, r.kosoku,
+    esc(r.free1_label), r.free1_val, esc(r.free2_label), r.free2_val,
+    esc(r.overview)
+  ].join(',')));
+
+  const blob = new Blob(['\uFEFF' + rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `作業日報_${data.date}_${data.area}.csv`
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  document.getElementById('done-message').innerText =
+    `${data.date}（${data.area}）\n${data.rows.length}名分のCSVをダウンロードしました。\n月次集計Excelの8行目以降に貼り付けてください。`;
+  document.getElementById('done-screen').classList.add('open');
+}
+
+function resetForm() {
+  document.getElementById('done-screen').classList.remove('open');
+  ['area','overview'].forEach(id => { document.getElementById(id).value=''; });
+  document.getElementById('area-other').classList.remove('visible');
+  document.getElementById('area-other').value = '';
+  workers = []; workerIdCounter = 0;
+  addWorker();
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
