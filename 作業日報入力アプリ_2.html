@@ -4,93 +4,86 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>作業日報 入力</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
-    --navy: #1F3864; --blue: #2E75B6; --lblue: #EAF3FB;
-    --green: #2E7D32; --orange: #E65100; --red: #C62828;
-    --bg: #F0F4F8; --white: #FFFFFF; --gray: #90A4AE;
-    --border: #CFD8DC; --text: #1A237E; --sub: #546E7A;
-    --extra-bg: #FFF8E1; --extra-border: #FFD54F;
+    --navy:#1F3864;--blue:#2E75B6;--lblue:#EAF3FB;
+    --green:#2E7D32;--orange:#E65100;--red:#C62828;
+    --bg:#F0F4F8;--white:#FFFFFF;--gray:#90A4AE;
+    --border:#CFD8DC;--text:#1A237E;--sub:#546E7A;
+    --extra-bg:#FFF8E1;--extra-border:#FFD54F;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:110px; }
-
-  header { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; padding:16px 16px 14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.25); }
-  header h1 { font-size:1.15em; font-weight:700; letter-spacing:.05em; }
-  header .subtitle { font-size:.78em; opacity:.8; margin-top:2px; }
-
-  .section { background:white; margin:12px; border-radius:12px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.08); }
-  .section-header { background:var(--navy); color:white; padding:10px 16px; font-size:.88em; font-weight:700; display:flex; align-items:center; gap:8px; }
-  .section-header .badge { background:rgba(255,255,255,.2); border-radius:10px; padding:1px 8px; font-size:.82em; }
-  .section-body { padding:14px 16px; }
-
-  .field { margin-bottom:14px; }
-  .field:last-child { margin-bottom:0; }
-  label { display:block; font-size:.8em; font-weight:700; color:var(--sub); margin-bottom:5px; letter-spacing:.03em; }
-  label .req { color:var(--red); margin-left:3px; }
-
-  input[type=text],input[type=date],input[type=number],select,textarea {
-    width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:8px;
-    font-size:1em; font-family:inherit; background:white; color:var(--text);
-    appearance:none; -webkit-appearance:none; outline:none;
-    transition:border-color .15s,box-shadow .15s;
-  }
-  input:focus,select:focus,textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(46,117,182,.15); }
-  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23546E7A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:36px; }
-  textarea { resize:vertical; min-height:64px; line-height:1.5; }
-  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-
-  .other-input { margin-top:6px; display:none; }
-  .other-input.visible { display:block; }
-
-  /* 作業員カード */
-  .worker-card { border:1.5px solid var(--border); border-radius:10px; margin-bottom:14px; overflow:hidden; }
-  .worker-card:last-child { margin-bottom:0; }
-  .worker-card-header { background:var(--lblue); padding:9px 12px; display:flex; align-items:center; justify-content:space-between; }
-  .worker-num { background:var(--blue); color:white; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:.82em; font-weight:700; flex-shrink:0; }
-  .worker-name-preview { font-size:.9em; font-weight:700; color:var(--navy); margin-left:8px; flex:1; }
-  .btn-remove { background:none; border:none; color:var(--gray); font-size:1.4em; cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1; }
-  .btn-remove:active { color:var(--red); background:#FFEBEE; }
-  .worker-card-body { padding:12px; }
-
-  /* 追加手当 */
-  .extra-section { background:var(--extra-bg); border:1px solid var(--extra-border); border-radius:8px; padding:10px 12px; margin-top:12px; }
-  .extra-title { font-size:.78em; font-weight:700; color:#7B6000; margin-bottom:10px; }
-  .extra-section label { font-size:.75em; color:#7B6000; }
-  .extra-section input { background:white; border-color:var(--extra-border); padding:8px 10px; font-size:.92em; }
-  .extra-divider { border:none; border-top:1px dashed var(--extra-border); margin:10px 0 8px; }
-  .extra-free-title { font-size:.75em; font-weight:700; color:#7B6000; margin-bottom:6px; }
-  .extra-label-input { padding:6px 10px; font-size:.82em; border:1px dashed var(--extra-border); border-radius:6px; background:white; width:100%; font-family:inherit; color:var(--text); outline:none; margin-bottom:4px; }
-  .extra-label-input:focus { border-color:var(--blue); }
-
-  .btn-add { width:100%; padding:13px; border:2px dashed var(--blue); border-radius:10px; background:var(--lblue); color:var(--blue); font-size:.95em; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s,transform .1s; margin-top:12px; }
-  .btn-add:active { transform:scale(.98); background:#D0E8F7; }
-
-  .submit-bar { position:fixed; bottom:0; left:0; right:0; background:white; padding:12px 16px; box-shadow:0 -2px 12px rgba(0,0,0,.12); z-index:100; }
-  .btn-submit { width:100%; padding:16px; background:linear-gradient(135deg,var(--green),#43A047); color:white; border:none; border-radius:10px; font-size:1.1em; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 3px 10px rgba(46,125,50,.35); transition:transform .1s; }
-  .btn-submit:active { transform:scale(.99); }
-  .csv-hint { font-size:.75em; color:var(--sub); text-align:center; margin-top:5px; }
-
-  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:flex-end; justify-content:center; }
-  .modal-bg.open { display:flex; }
-  .modal { background:white; width:100%; max-width:500px; border-radius:16px 16px 0 0; padding:24px 20px 32px; max-height:85vh; overflow-y:auto; animation:slideUp .25s ease; }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  .modal h2 { font-size:1.1em; color:var(--navy); margin-bottom:14px; }
-  .preview-table { width:100%; border-collapse:collapse; font-size:.8em; margin-bottom:16px; }
-  .preview-table th { background:var(--navy); color:white; padding:6px 8px; text-align:left; }
-  .preview-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
-  .preview-table tr:nth-child(even) td { background:var(--lblue); }
-  .modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .btn-cancel { padding:13px; border:1.5px solid var(--border); border-radius:8px; background:white; font-family:inherit; font-size:.95em; font-weight:700; color:var(--sub); cursor:pointer; }
-  .btn-confirm { padding:13px; border:none; border-radius:8px; background:var(--green); color:white; font-family:inherit; font-size:.95em; font-weight:700; cursor:pointer; }
-
-  .done-screen { display:none; position:fixed; inset:0; background:var(--green); color:white; z-index:300; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px; }
-  .done-screen.open { display:flex; }
-  .done-icon { font-size:5em; margin-bottom:16px; }
-  .done-screen h2 { font-size:1.6em; margin-bottom:8px; }
-  .done-screen p { opacity:.85; font-size:.95em; line-height:1.7; margin-bottom:28px; white-space:pre-wrap; }
-  .btn-next { background:white; color:var(--green); border:none; border-radius:10px; padding:14px 32px; font-family:inherit; font-size:1em; font-weight:700; cursor:pointer; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:110px}
+  header{background:linear-gradient(135deg,var(--navy),var(--blue));color:white;padding:16px 16px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  header h1{font-size:1.15em;font-weight:700;letter-spacing:.05em}
+  header .subtitle{font-size:.78em;opacity:.8;margin-top:2px}
+  .section{background:white;margin:12px;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+  .section-header{background:var(--navy);color:white;padding:10px 16px;font-size:.88em;font-weight:700;display:flex;align-items:center;gap:8px}
+  .section-header .badge{background:rgba(255,255,255,.2);border-radius:10px;padding:1px 8px;font-size:.82em}
+  .section-body{padding:14px 16px}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-size:.8em;font-weight:700;color:var(--sub);margin-bottom:5px;letter-spacing:.03em}
+  label .req{color:var(--red);margin-left:3px}
+  input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:1em;font-family:inherit;background:white;color:var(--text);appearance:none;-webkit-appearance:none;outline:none;transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23546E7A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:36px}
+  textarea{resize:vertical;min-height:64px;line-height:1.5}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .other-input{margin-top:6px;display:none}
+  .other-input.visible{display:block}
+  .worker-card{border:1.5px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+  .worker-card:last-child{margin-bottom:0}
+  .worker-card-header{background:var(--lblue);padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+  .worker-num{background:var(--blue);color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.82em;font-weight:700;flex-shrink:0}
+  .worker-name-preview{font-size:.9em;font-weight:700;color:var(--navy);margin-left:8px;flex:1}
+  .btn-remove{background:none;border:none;color:var(--gray);font-size:1.4em;cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1}
+  .btn-remove:active{color:var(--red);background:#FFEBEE}
+  .worker-card-body{padding:12px}
+  .extra-section{background:var(--extra-bg);border:1px solid var(--extra-border);border-radius:8px;padding:10px 12px;margin-top:12px}
+  .extra-title{font-size:.78em;font-weight:700;color:#7B6000;margin-bottom:10px}
+  .extra-section label{font-size:.75em;color:#7B6000}
+  .extra-section input{background:white;border-color:var(--extra-border);padding:8px 10px;font-size:.92em}
+  .extra-divider{border:none;border-top:1px dashed var(--extra-border);margin:10px 0 8px}
+  .extra-free-title{font-size:.75em;font-weight:700;color:#7B6000;margin-bottom:6px}
+  .extra-label-input{padding:6px 10px;font-size:.82em;border:1px dashed var(--extra-border);border-radius:6px;background:white;width:100%;font-family:inherit;color:var(--text);outline:none;margin-bottom:4px}
+  .extra-label-input:focus{border-color:var(--blue)}
+  .btn-add{width:100%;padding:13px;border:2px dashed var(--blue);border-radius:10px;background:var(--lblue);color:var(--blue);font-size:.95em;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,transform .1s;margin-top:12px}
+  .btn-add:active{transform:scale(.98);background:#D0E8F7}
+  .submit-bar{position:fixed;bottom:0;left:0;right:0;background:white;padding:12px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.12);z-index:100}
+  .btn-submit{width:100%;padding:16px;background:linear-gradient(135deg,var(--green),#43A047);color:white;border:none;border-radius:10px;font-size:1.1em;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(46,125,50,.35);transition:transform .1s,opacity .1s}
+  .btn-submit:active{transform:scale(.99)}
+  .btn-submit:disabled{opacity:.6;cursor:not-allowed}
+  .csv-hint{font-size:.75em;color:var(--sub);text-align:center;margin-top:5px}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-end;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:white;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:24px 20px 32px;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal h2{font-size:1.1em;color:var(--navy);margin-bottom:14px}
+  .preview-table{width:100%;border-collapse:collapse;font-size:.8em;margin-bottom:16px}
+  .preview-table th{background:var(--navy);color:white;padding:6px 8px;text-align:left}
+  .preview-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+  .preview-table tr:nth-child(even) td{background:var(--lblue)}
+  .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn-cancel{padding:13px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:inherit;font-size:.95em;font-weight:700;color:var(--sub);cursor:pointer}
+  .btn-confirm{padding:13px;border:none;border-radius:8px;background:var(--green);color:white;font-family:inherit;font-size:.95em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn-confirm:disabled{opacity:.6;cursor:not-allowed}
+  .sending-indicator{display:none;text-align:center;padding:12px;font-size:.9em;color:var(--blue)}
+  .sending-indicator.visible{display:block}
+  .done-screen{display:none;position:fixed;inset:0;background:var(--green);color:white;z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+  .done-screen.open{display:flex}
+  .done-icon{font-size:5em;margin-bottom:16px}
+  .done-screen h2{font-size:1.6em;margin-bottom:8px}
+  .done-screen p{opacity:.85;font-size:.95em;line-height:1.7;margin-bottom:28px;white-space:pre-wrap}
+  .btn-next{background:white;color:var(--green);border:none;border-radius:10px;padding:14px 32px;font-family:inherit;font-size:1em;font-weight:700;cursor:pointer}
+  /* 送信状態バッジ */
+  .status-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+  .status-badge{font-size:.75em;padding:3px 10px;border-radius:10px;font-weight:700}
+  .status-badge.ok{background:#E8F5E9;color:#2E7D32}
+  .status-badge.ng{background:#FFEBEE;color:#C62828}
+  .status-badge.pending{background:#E3F2FD;color:#1565C0}
 </style>
 </head>
 <body>
@@ -123,6 +116,10 @@
       </div>
     </div>
     <div class="field">
+      <label>報告者名<span class="req">*</span></label>
+      <input type="text" id="sender" placeholder="現場責任者のお名前">
+    </div>
+    <div class="field">
       <label>作業概要（任意）</label>
       <input type="text" id="overview" placeholder="例：B1区 除雪・重機作業">
     </div>
@@ -141,29 +138,50 @@
 </div>
 
 <div class="submit-bar">
-  <button class="btn-submit" onclick="showPreview()">📤 確認して送信</button>
-  <div class="csv-hint">送信するとCSVがダウンロードされます。月次集計Excelに貼り付けてご使用ください。</div>
+  <button class="btn-submit" id="submit-btn" onclick="showPreview()">📤 確認して送信</button>
+  <div class="csv-hint">送信するとメール送信＋CSVダウンロードが同時に行われます</div>
 </div>
 
+<!-- 確認モーダル -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h2>📋 送信内容の確認</h2>
     <div id="preview-content"></div>
+    <div class="sending-indicator" id="sending-indicator">
+      ⏳ メール送信中...しばらくお待ちください
+    </div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">← 戻る</button>
-      <button class="btn-confirm" onclick="submitData()">✅ 送信する</button>
+      <button class="btn-cancel" id="btn-cancel" onclick="closeModal()">← 戻る</button>
+      <button class="btn-confirm" id="btn-confirm" onclick="submitData()">
+        ✅ 送信する
+      </button>
     </div>
   </div>
 </div>
 
+<!-- 完了画面 -->
 <div class="done-screen" id="done-screen">
   <div class="done-icon">✅</div>
   <h2>送信完了！</h2>
   <p id="done-message"></p>
+  <div class="status-row" id="status-row"></div>
+  <br>
   <button class="btn-next" onclick="resetForm()">📋 次の日報を入力</button>
 </div>
 
 <script>
+// ===========================
+// EmailJS 設定
+// ===========================
+const EMAILJS_SERVICE_ID  = 'service_t7q0klq';
+const EMAILJS_TEMPLATE_ID = 'template_pc0pkp3';
+const EMAILJS_PUBLIC_KEY  = 'VkI8OVz2fM2AkdhSJ';
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ===========================
+// マスターデータ
+// ===========================
 const COMPANIES = [
   '日吉建設㈱','大松建設工業','北旺工業','新勢商事','博翔工業',
   '舘建設工業','下村総業','ｻﾀﾃ工業','KOBUSHI','リーテック',
@@ -297,7 +315,6 @@ function buildCard(w, num) {
         <label>作業内容</label>
         <textarea data-field="content" data-id="${w.id}" placeholder="例：B1区 除雪 重機作業" rows="2"></textarea>
       </div>
-
       <div class="extra-section">
         <div class="extra-title">💴 追加手当</div>
         <div class="row2">${fixedHTML}</div>
@@ -307,14 +324,12 @@ function buildCard(w, num) {
           <div class="field">
             <input type="text" class="extra-label-input" placeholder="項目名（例：特殊作業）"
                    data-field="free1_label" data-id="${w.id}">
-            <input type="number" min="0" step="1" placeholder="数量"
-                   data-field="free1_val" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量" data-field="free1_val" data-id="${w.id}">
           </div>
           <div class="field">
             <input type="text" class="extra-label-input" placeholder="項目名（例：資材運搬）"
                    data-field="free2_label" data-id="${w.id}">
-            <input type="number" min="0" step="1" placeholder="数量"
-                   data-field="free2_val" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量" data-field="free2_val" data-id="${w.id}">
           </div>
         </div>
       </div>
@@ -329,47 +344,52 @@ function get(field, id) {
 
 function collectData() {
   const areaVal = document.getElementById('area').value;
-  const area = areaVal === 'その他'
+  const area    = areaVal === 'その他'
     ? (document.getElementById('area-other').value.trim() || 'その他') : areaVal;
-  const date     = document.getElementById('date').value;
+  const date   = document.getElementById('date').value;
+  const sender = document.getElementById('sender').value.trim();
   const overview = document.getElementById('overview').value.trim();
-
   const rows = workers.map(w => {
     const coSel = get('company', w.id);
     const company = coSel === 'その他' ? (get('company_other', w.id) || 'その他') : coSel;
     return {
-      date, area, overview, company,
-      name:     get('name', w.id),
-      shoku:    get('shoku', w.id),
-      niko:     get('niko', w.id) || '1',
-      car:      get('car', w.id),
-      start:    get('start', w.id),
-      end:      get('end', w.id),
-      hours:    get('hours', w.id),
+      date, area, sender, overview, company,
+      name:     get('name',     w.id),
+      shoku:    get('shoku',    w.id),
+      niko:     get('niko',     w.id) || '1',
+      car:      get('car',      w.id),
+      start:    get('start',    w.id),
+      end:      get('end',      w.id),
+      hours:    get('hours',    w.id),
       jikanGai: get('jikanGai', w.id),
-      content:  get('content', w.id),
-      shinya:   get('shinya', w.id),
-      kyujitu:  get('kyujitu', w.id),
-      josetu:   get('josetu', w.id),
-      kosoku:   get('kosoku', w.id),
+      content:  get('content',  w.id),
+      shinya:   get('shinya',   w.id),
+      kyujitu:  get('kyujitu',  w.id),
+      josetu:   get('josetu',   w.id),
+      kosoku:   get('kosoku',   w.id),
       free1_label: get('free1_label', w.id),
-      free1_val:   get('free1_val', w.id),
+      free1_val:   get('free1_val',   w.id),
       free2_label: get('free2_label', w.id),
-      free2_val:   get('free2_val', w.id),
+      free2_val:   get('free2_val',   w.id),
     };
   });
-  return {date, area, overview, rows};
+  return {date, area, sender, overview, rows};
 }
 
+// ===========================
+// プレビュー
+// ===========================
 function showPreview() {
   const data = collectData();
-  if (!data.date) { alert('日付を入力してください'); return; }
-  if (!data.area) { alert('作業地区を選択してください'); return; }
+  if (!data.date)   { alert('日付を入力してください'); return; }
+  if (!data.area)   { alert('作業地区を選択してください'); return; }
+  if (!data.sender) { alert('報告者名を入力してください'); return; }
   if (data.rows.some(r => !r.company || !r.name || !r.shoku)) {
     alert('会社名・氏名・職種は必須です。\n未入力の作業員があります。'); return;
   }
+
   let html = `<p style="font-size:.84em;color:var(--sub);margin-bottom:10px;">
-    📅 <strong>${data.date}</strong>　📍 ${data.area}　👷 ${data.rows.length}名</p>
+    📅 <strong>${data.date}</strong>　📍 ${data.area}　👤 ${data.sender}　👷 ${data.rows.length}名</p>
   <table class="preview-table">
     <thead><tr><th>No</th><th>会社</th><th>氏名</th><th>職種</th><th>人工</th><th>時間外</th></tr></thead>
     <tbody>`;
@@ -382,43 +402,131 @@ function showPreview() {
   document.getElementById('modal-bg').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+function closeModal() {
+  if (document.getElementById('btn-confirm').disabled) return; // 送信中は閉じない
+  document.getElementById('modal-bg').classList.remove('open');
+}
 
-function submitData() {
-  const data = collectData();
-  closeModal();
+// ===========================
+// メール本文生成
+// ===========================
+function buildEmailText(data) {
+  let lines = [];
+  lines.push(`【作業日報】${data.date}　${data.area}`);
+  lines.push(`報告者：${data.sender}　作業員：${data.rows.length}名`);
+  if (data.overview) lines.push(`概要：${data.overview}`);
+  lines.push('');
+  lines.push('No | 会社名 | 氏名 | 職種 | 人工 | 開始 | 終了 | 作業時間 | 時間外 | 車両 | 作業内容');
+  lines.push('---|--------|------|------|------|------|------|---------|--------|------|------');
+  data.rows.forEach((r, i) => {
+    const extras = [];
+    if (r.shinya)  extras.push(`深夜手当:${r.shinya}日`);
+    if (r.kyujitu) extras.push(`休日出勤:${r.kyujitu}H`);
+    if (r.josetu)  extras.push(`除雪手当:${r.josetu}日`);
+    if (r.kosoku)  extras.push(`高速利用:${r.kosoku}回`);
+    if (r.free1_label && r.free1_val) extras.push(`${r.free1_label}:${r.free1_val}`);
+    if (r.free2_label && r.free2_val) extras.push(`${r.free2_label}:${r.free2_val}`);
+    const extrasStr = extras.length ? `　[${extras.join(' / ')}]` : '';
+    lines.push(`${i+1} | ${r.company} | ${r.name} | ${r.shoku} | ${r.niko}日 | ${r.start||'-'} | ${r.end||'-'} | ${r.hours||'-'}H | ${r.jikanGai||'0'}H | ${r.car||'－'} | ${r.content}${extrasStr}`);
+  });
+  return lines.join('\n');
+}
+
+// ===========================
+// CSV生成
+// ===========================
+function buildCSV(data) {
   const esc = v => `"${String(v).replace(/"/g,'""')}"`;
   const headers = [
-    '日付','作業地区','会社名','氏名','職種','人工(日)',
+    '日付','作業地区','報告者','会社名','氏名','職種','人工(日)',
     '作業開始','作業終了','作業時間(H)','時間外(H)','車両','作業内容',
     '深夜手当(日)','休日出勤(H)','除雪手当(日)','高速利用(回)',
     '自由項目1名称','自由項目1数量','自由項目2名称','自由項目2数量','作業概要'
   ];
   const rows = [headers.join(',')];
   data.rows.forEach(r => rows.push([
-    r.date, r.area, esc(r.company), esc(r.name), r.shoku, r.niko,
+    r.date, r.area, esc(r.sender), esc(r.company), esc(r.name), r.shoku, r.niko,
     r.start, r.end, r.hours, r.jikanGai, r.car, esc(r.content),
     r.shinya, r.kyujitu, r.josetu, r.kosoku,
     esc(r.free1_label), r.free1_val, esc(r.free2_label), r.free2_val,
     esc(r.overview)
   ].join(',')));
+  return '\uFEFF' + rows.join('\n');
+}
 
-  const blob = new Blob(['\uFEFF' + rows.join('\n')], {type:'text/csv;charset=utf-8;'});
-  const a = Object.assign(document.createElement('a'), {
+// ===========================
+// 送信メイン
+// ===========================
+async function submitData() {
+  const data = collectData();
+  const btnConfirm = document.getElementById('btn-confirm');
+  const btnCancel  = document.getElementById('btn-cancel');
+  const indicator  = document.getElementById('sending-indicator');
+
+  // ボタン無効化・インジケーター表示
+  btnConfirm.disabled = true;
+  btnCancel.disabled  = true;
+  btnConfirm.textContent = '⏳ 送信中...';
+  indicator.classList.add('visible');
+
+  let mailOk = false;
+  let mailError = '';
+
+  // ── EmailJS 送信
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      date:         data.date,
+      area:         data.area,
+      sender:       data.sender,
+      count:        String(data.rows.length),
+      workers_text: buildEmailText(data),
+    });
+    mailOk = true;
+  } catch (e) {
+    mailError = e?.text || e?.message || JSON.stringify(e);
+    console.error('EmailJS error:', e);
+  }
+
+  // ── CSV ダウンロード（メール成否に関わらず実行）
+  const csvStr = buildCSV(data);
+  const blob   = new Blob([csvStr], {type:'text/csv;charset=utf-8;'});
+  const a      = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob),
     download: `作業日報_${data.date}_${data.area}.csv`
   });
   a.click();
   URL.revokeObjectURL(a.href);
 
-  document.getElementById('done-message').innerText =
-    `${data.date}（${data.area}）\n${data.rows.length}名分のCSVをダウンロードしました。\n月次集計Excelの8行目以降に貼り付けてください。`;
+  // ── 完了画面
+  closeModal();
+  document.getElementById('modal-bg').classList.remove('open');
+  indicator.classList.remove('visible');
+  btnConfirm.disabled = false;
+  btnCancel.disabled  = false;
+  btnConfirm.textContent = '✅ 送信する';
+
+  const statusRow = document.getElementById('status-row');
+  statusRow.innerHTML = `
+    <span class="status-badge ${mailOk ? 'ok' : 'ng'}">
+      ${mailOk ? '✅ メール送信成功' : '❌ メール送信失敗'}
+    </span>
+    <span class="status-badge ok">✅ CSV ダウンロード完了</span>
+  `;
+
+  const msg = mailOk
+    ? `${data.date}（${data.area}）\n${data.rows.length}名分をメール送信しました。\nCSVもダウンロードされました。`
+    : `メール送信に失敗しました。\nCSVはダウンロードされています。\nExcelに手動で貼り付けてください。\n\nエラー：${mailError}`;
+
+  document.getElementById('done-message').innerText = msg;
   document.getElementById('done-screen').classList.add('open');
 }
 
+// ===========================
+// リセット
+// ===========================
 function resetForm() {
   document.getElementById('done-screen').classList.remove('open');
-  ['area','overview'].forEach(id => { document.getElementById(id).value=''; });
+  ['area','sender','overview'].forEach(id => { document.getElementById(id).value=''; });
   document.getElementById('area-other').classList.remove('visible');
   document.getElementById('area-other').value = '';
   workers = []; workerIdCounter = 0;
