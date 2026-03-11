@@ -200,7 +200,28 @@ const FIXED_EXTRAS = [
   {key:'kosoku',  label:'高速利用',  unit:'回'},
 ];
 
+// workers配列：各要素がそのまま入力データを保持
 let workers = [], workerIdCounter = 0;
+
+// 時刻プルダウン用オプション（0:00〜翌5:00、30分刻み・24時間対応）
+function buildTimeOptions(selected = '') {
+  let opts = '<option value="">－</option>';
+  // 0:00〜23:30
+  for (let h = 0; h <= 23; h++) {
+    for (let m of [0, 30]) {
+      const val = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      opts += `<option${selected === val ? ' selected' : ''}>${val}</option>`;
+    }
+  }
+  // 翌0:00〜翌5:00（夜勤の終了時刻用）
+  for (let h = 0; h <= 5; h++) {
+    for (let m of [0, 30]) {
+      const val = `翌${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      opts += `<option${selected === val ? ' selected' : ''}>${val}</option>`;
+    }
+  }
+  return opts;
+}
 
 window.onload = () => {
   const t = new Date();
@@ -216,14 +237,28 @@ function handleAreaChange(sel) {
 }
 
 function handleCompanyChange(sel, id) {
+  const w = workers.find(x => x.id === id);
+  if (w) w.company = sel.value;
   const el = document.getElementById(`co-other-${id}`);
   el.classList.toggle('visible', sel.value === 'その他');
-  if (sel.value === 'その他') el.focus(); else el.value = '';
+  if (sel.value === 'その他') el.focus(); else { el.value = ''; if(w) w.company_other = ''; }
+}
+
+// ── 入力値をworkerオブジェクトに即時保存
+function saveField(field, id, val) {
+  const w = workers.find(x => x.id === id);
+  if (w) w[field] = val;
 }
 
 function addWorker() {
   const id = workerIdCounter++;
-  workers.push({id});
+  // 全フィールドをデフォルト値で初期化
+  workers.push({
+    id, company:'', company_other:'', name:'', shoku:'', niko:'',
+    car:'', start:'', end:'', hours:'', jikanGai:'', content:'',
+    shinya:'', kyujitu:'', josetu:'', kosoku:'',
+    free1_label:'', free1_val:'', free2_label:'', free2_val:''
+  });
   renderWorkers();
   setTimeout(() => {
     const card = document.getElementById(`wcard-${id}`);
@@ -241,84 +276,117 @@ function renderWorkers() {
   const list = document.getElementById('worker-list');
   list.innerHTML = workers.map((w, i) => buildCard(w, i+1)).join('');
   document.getElementById('worker-count-badge').textContent = `${workers.length}名`;
-  list.querySelectorAll('input[data-namefield]').forEach(inp => {
-    inp.addEventListener('input', e => {
-      e.target.closest('.worker-card').querySelector('.worker-name-preview').textContent =
-        e.target.value || '（未入力）';
+
+  // 各カードのイベントを設定
+  workers.forEach(w => {
+    const card = document.getElementById(`wcard-${w.id}`);
+    if (!card) return;
+
+    // テキスト・数値入力 → saveField
+    card.querySelectorAll('input[data-field], textarea[data-field]').forEach(el => {
+      el.addEventListener('input', e => {
+        saveField(e.target.dataset.field, w.id, e.target.value);
+        // 氏名プレビュー更新
+        if (e.target.dataset.field === 'name') {
+          card.querySelector('.worker-name-preview').textContent = e.target.value || '（未入力）';
+        }
+      });
+    });
+
+    // セレクト → saveField
+    card.querySelectorAll('select[data-field]').forEach(el => {
+      el.addEventListener('change', e => {
+        saveField(e.target.dataset.field, w.id, e.target.value);
+      });
     });
   });
 }
 
 function buildCard(w, num) {
-  const coOpts = COMPANIES.map(c => `<option>${c}</option>`).join('');
-  const shOpts = SHOKUSHU.map(s => `<option>${s}</option>`).join('');
+  const sel  = (v, opts) => opts.replace(`>${v}<`, ` selected>${v}<`);
+  const coOpts = `<option value="">選択してください</option>` +
+    COMPANIES.map(c => `<option${w.company===c?' selected':''}>${c}</option>`).join('');
+  const shOpts = `<option value="">選択</option>` +
+    SHOKUSHU.map(s => `<option${w.shoku===s?' selected':''}>${s}</option>`).join('');
+  const carOpts = `<option value=""${!w.car?' selected':''}>－</option><option${w.car==='○'?' selected':''}>○</option>`;
+
   const fixedHTML = FIXED_EXTRAS.map(ex => `
     <div class="field">
       <label>${ex.label}（${ex.unit}）</label>
-      <input type="number" min="0" step="1" placeholder="0" data-field="${ex.key}" data-id="${w.id}">
+      <input type="number" min="0" step="1" placeholder="0"
+             value="${w[ex.key]||''}"
+             data-field="${ex.key}" data-id="${w.id}">
     </div>`).join('');
+
   const rmBtn = workers.length > 1
     ? `<button class="btn-remove" onclick="removeWorker(${w.id})">×</button>` : '';
+
+  const namePreview = w.name || '（未入力）';
+  const coOtherVisible = w.company === 'その他' ? 'visible' : '';
 
   return `
   <div class="worker-card" id="wcard-${w.id}">
     <div class="worker-card-header">
       <div class="worker-num">${num}</div>
-      <div class="worker-name-preview">（未入力）</div>
+      <div class="worker-name-preview">${namePreview}</div>
       ${rmBtn}
     </div>
     <div class="worker-card-body">
       <div class="field">
         <label>会社名<span class="req">*</span></label>
         <select data-field="company" data-id="${w.id}" onchange="handleCompanyChange(this,${w.id})">
-          <option value="">選択してください</option>${coOpts}
+          ${coOpts}
         </select>
-        <input type="text" id="co-other-${w.id}" class="other-input" placeholder="会社名を入力"
+        <input type="text" id="co-other-${w.id}" class="other-input ${coOtherVisible}"
+               placeholder="会社名を入力" value="${w.company_other||''}"
                data-field="company_other" data-id="${w.id}">
       </div>
       <div class="row2">
         <div class="field">
           <label>氏名<span class="req">*</span></label>
-          <input type="text" data-namefield="1" data-field="name" data-id="${w.id}" placeholder="氏名を入力">
+          <input type="text" data-field="name" data-id="${w.id}"
+                 placeholder="氏名を入力" value="${w.name||''}">
         </div>
         <div class="field">
           <label>職種<span class="req">*</span></label>
-          <select data-field="shoku" data-id="${w.id}"><option value="">選択</option>${shOpts}</select>
+          <select data-field="shoku" data-id="${w.id}">${shOpts}</select>
         </div>
       </div>
       <div class="row2">
         <div class="field">
           <label>人工（日）</label>
-          <input type="number" min="0" max="1" step="0.5" placeholder="1" data-field="niko" data-id="${w.id}">
+          <input type="number" min="0" max="1" step="0.5" placeholder="1"
+                 value="${w.niko||''}" data-field="niko" data-id="${w.id}">
         </div>
         <div class="field">
           <label>車両</label>
-          <select data-field="car" data-id="${w.id}">
-            <option value="">－</option><option>○</option>
-          </select>
+          <select data-field="car" data-id="${w.id}">${carOpts}</select>
         </div>
       </div>
       <div class="row3">
         <div class="field">
           <label>開始時刻</label>
-          <input type="text" placeholder="07:00" data-field="start" data-id="${w.id}">
+          <select data-field="start" data-id="${w.id}">${buildTimeOptions(w.start)}</select>
         </div>
         <div class="field">
           <label>終了時刻</label>
-          <input type="text" placeholder="17:00" data-field="end" data-id="${w.id}">
+          <select data-field="end" data-id="${w.id}">${buildTimeOptions(w.end)}</select>
         </div>
         <div class="field">
           <label>作業時間(H)</label>
-          <input type="number" min="0" max="24" step="0.5" placeholder="8" data-field="hours" data-id="${w.id}">
+          <input type="number" min="0" max="24" step="0.5" placeholder="8"
+                 value="${w.hours||''}" data-field="hours" data-id="${w.id}">
         </div>
       </div>
       <div class="field">
         <label>時間外(H)</label>
-        <input type="number" min="0" step="0.5" placeholder="0" data-field="jikanGai" data-id="${w.id}">
+        <input type="number" min="0" step="0.5" placeholder="0"
+               value="${w.jikanGai||''}" data-field="jikanGai" data-id="${w.id}">
       </div>
       <div class="field">
         <label>作業内容</label>
-        <textarea data-field="content" data-id="${w.id}" placeholder="例：B1区 除雪 重機作業" rows="2"></textarea>
+        <textarea data-field="content" data-id="${w.id}"
+                  placeholder="例：B1区 除雪 重機作業" rows="2">${w.content||''}</textarea>
       </div>
       <div class="extra-section">
         <div class="extra-title">💴 追加手当</div>
@@ -328,13 +396,15 @@ function buildCard(w, num) {
         <div class="row2">
           <div class="field">
             <input type="text" class="extra-label-input" placeholder="項目名（例：特殊作業）"
-                   data-field="free1_label" data-id="${w.id}">
-            <input type="number" min="0" step="1" placeholder="数量" data-field="free1_val" data-id="${w.id}">
+                   value="${w.free1_label||''}" data-field="free1_label" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量"
+                   value="${w.free1_val||''}" data-field="free1_val" data-id="${w.id}">
           </div>
           <div class="field">
             <input type="text" class="extra-label-input" placeholder="項目名（例：資材運搬）"
-                   data-field="free2_label" data-id="${w.id}">
-            <input type="number" min="0" step="1" placeholder="数量" data-field="free2_val" data-id="${w.id}">
+                   value="${w.free2_label||''}" data-field="free2_label" data-id="${w.id}">
+            <input type="number" min="0" step="1" placeholder="数量"
+                   value="${w.free2_val||''}" data-field="free2_val" data-id="${w.id}">
           </div>
         </div>
       </div>
@@ -342,40 +412,35 @@ function buildCard(w, num) {
   </div>`;
 }
 
-function get(field, id) {
-  const el = document.querySelector(`[data-field="${field}"][data-id="${id}"]`);
-  return el ? el.value.trim() : '';
-}
-
 function collectData() {
   const areaVal = document.getElementById('area').value;
   const area    = areaVal === 'その他'
     ? (document.getElementById('area-other').value.trim() || 'その他') : areaVal;
-  const date   = document.getElementById('date').value;
-  const sender = document.getElementById('sender').value.trim();
+  const date    = document.getElementById('date').value;
+  const sender  = document.getElementById('sender').value.trim();
   const overview = document.getElementById('overview').value.trim();
+
   const rows = workers.map(w => {
-    const coSel = get('company', w.id);
-    const company = coSel === 'その他' ? (get('company_other', w.id) || 'その他') : coSel;
+    const company = w.company === 'その他' ? (w.company_other || 'その他') : w.company;
     return {
       date, area, sender, overview, company,
-      name:     get('name',     w.id),
-      shoku:    get('shoku',    w.id),
-      niko:     get('niko',     w.id) || '1',
-      car:      get('car',      w.id),
-      start:    get('start',    w.id),
-      end:      get('end',      w.id),
-      hours:    get('hours',    w.id),
-      jikanGai: get('jikanGai', w.id),
-      content:  get('content',  w.id),
-      shinya:   get('shinya',   w.id),
-      kyujitu:  get('kyujitu',  w.id),
-      josetu:   get('josetu',   w.id),
-      kosoku:   get('kosoku',   w.id),
-      free1_label: get('free1_label', w.id),
-      free1_val:   get('free1_val',   w.id),
-      free2_label: get('free2_label', w.id),
-      free2_val:   get('free2_val',   w.id),
+      name:     w.name     || '',
+      shoku:    w.shoku    || '',
+      niko:     w.niko     || '1',
+      car:      w.car      || '',
+      start:    w.start    || '',
+      end:      w.end      || '',
+      hours:    w.hours    || '',
+      jikanGai: w.jikanGai || '',
+      content:  w.content  || '',
+      shinya:   w.shinya   || '',
+      kyujitu:  w.kyujitu  || '',
+      josetu:   w.josetu   || '',
+      kosoku:   w.kosoku   || '',
+      free1_label: w.free1_label || '',
+      free1_val:   w.free1_val   || '',
+      free2_label: w.free2_label || '',
+      free2_val:   w.free2_val   || '',
     };
   });
   return {date, area, sender, overview, rows};
