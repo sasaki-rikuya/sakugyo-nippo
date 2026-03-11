@@ -9,128 +9,105 @@
     --navy:#1F3864;--blue:#2E75B6;--lblue:#EAF3FB;
     --green:#2E7D32;--lgreen:#E8F5E9;
     --red:#C62828;--lred:#FFEBEE;
-    --orange:#E65100;--yellow:#FFF8E1;--ylbdr:#FFD54F;
-    --bg:#F0F4F8;--white:#fff;--gray:#90A4AE;
-    --border:#CFD8DC;--text:#1A237E;--sub:#546E7A;
+    --orange:#E65100;--bg:#F0F4F8;--white:#fff;
+    --gray:#90A4AE;--border:#CFD8DC;--text:#1A237E;--sub:#546E7A;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:120px}
-
-  /* ヘッダー */
   header{background:linear-gradient(135deg,var(--navy),var(--blue));color:white;padding:14px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
   header h1{font-size:1.1em;font-weight:700;letter-spacing:.05em}
   header .subtitle{font-size:.75em;opacity:.85;margin-top:2px}
-
-  /* セクション */
   .section{background:white;margin:10px 12px;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
   .sec-hdr{background:var(--navy);color:white;padding:9px 14px;font-size:.85em;font-weight:700;display:flex;align-items:center;gap:6px}
+  .sec-hdr .badge{background:rgba(255,255,255,.2);border-radius:10px;padding:1px 8px;font-size:.82em}
   .sec-body{padding:12px 14px}
-
-  /* フォーム */
   .field{margin-bottom:12px}
   .field:last-child{margin-bottom:0}
   label{display:block;font-size:.78em;font-weight:700;color:var(--sub);margin-bottom:4px}
   label .req{color:var(--red);margin-left:3px}
   .fixed-val{font-size:.95em;font-weight:700;color:var(--navy);padding:10px 12px;background:var(--lblue);border-radius:8px}
-  input[type=text],input[type=date],input[type=number],select,textarea{
-    width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;
-    font-size:1em;font-family:inherit;background:white;color:var(--text);
-    appearance:none;-webkit-appearance:none;outline:none;transition:border-color .15s}
+  input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:1em;font-family:inherit;background:white;color:var(--text);appearance:none;-webkit-appearance:none;outline:none;transition:border-color .15s}
   input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.15)}
   select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23546E7A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:34px}
+  textarea{resize:vertical;min-height:60px;line-height:1.5}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .other-input{margin-top:6px;display:none}
   .other-input.visible{display:block}
 
   /* 点検テーブル */
-  .inspection-table{width:100%;border-collapse:collapse;font-size:.82em}
-  .inspection-table th{background:var(--navy);color:white;padding:7px 8px;text-align:left;font-weight:700}
-  .inspection-table th:last-child,.inspection-table th:nth-last-child(2),.inspection-table th:nth-last-child(3){text-align:center;width:56px}
-  .inspection-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
-  .inspection-table tr:nth-child(even) td{background:#F8FBFF}
-  .insp-num{color:var(--blue);font-weight:700;margin-right:4px}
+  .insp-table{width:100%;border-collapse:collapse;font-size:.82em}
+  .insp-table th{background:var(--navy);color:white;padding:7px 6px;text-align:center;font-weight:700;font-size:.8em}
+  .insp-table th:first-child{text-align:left;padding-left:10px}
+  .insp-table td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .insp-table td:first-child{padding-left:10px}
+  .insp-table tr:nth-child(even) td{background:#F8FBFF}
+  .insp-num{color:var(--blue);font-weight:700;margin-right:3px}
+  .insp-btns{display:flex;gap:4px;justify-content:center}
+  .insp-btn{width:38px;height:30px;border-radius:6px;border:1.5px solid var(--border);background:white;font-size:.82em;font-weight:700;cursor:pointer;color:var(--sub);transition:all .12s;font-family:inherit}
+  .insp-btn.selected-ok{background:#E8F5E9;border-color:#2E7D32;color:#2E7D32}
+  .insp-btn.selected-ng{background:#FFEBEE;border-color:#C62828;color:#C62828}
+  .insp-btn.selected-na{background:#F3F3F3;border-color:#90A4AE;color:#546E7A}
 
-  /* ラジオボタン点検 */
-  .insp-radio{display:flex;justify-content:center}
-  .insp-radio input[type=radio]{display:none}
-  .insp-radio label{display:inline-flex;align-items:center;justify-content:center;
-    width:44px;height:32px;border-radius:6px;border:1.5px solid var(--border);
-    cursor:pointer;font-size:.85em;font-weight:700;transition:all .15s;color:var(--sub);background:white}
-  .insp-radio input[type=radio]:checked + label.ok{background:#E8F5E9;border-color:#2E7D32;color:#2E7D32}
-  .insp-radio input[type=radio]:checked + label.ng{background:#FFEBEE;border-color:#C62828;color:#C62828}
-  .insp-radio input[type=radio]:checked + label.na{background:#F3F3F3;border-color:#90A4AE;color:#546E7A}
-
-  /* 積込・荷卸ボタンエリア */
-  .ops-section{background:white;margin:10px 12px;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
-  .ops-body{padding:14px}
-  .warning-txt{color:var(--red);font-size:.8em;font-weight:700;text-align:center;
-    background:var(--lred);border:1px solid #FFCDD2;border-radius:8px;
-    padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:6px}
-  .ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-  .ops-btn{width:100%;padding:18px 8px;border:none;border-radius:10px;font-size:1em;font-weight:700;
-    font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
-    transition:transform .1s,opacity .1s}
+  /* 運搬操作 */
+  .warning-txt{color:var(--red);font-size:.82em;font-weight:700;text-align:center;background:var(--lred);border:1px solid #FFCDD2;border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:5px}
+  .ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .ops-btn{width:100%;padding:16px 8px;border:none;border-radius:10px;font-size:1em;font-weight:700;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .1s,opacity .15s}
   .ops-btn:active{transform:scale(.97)}
   .ops-btn.start{background:linear-gradient(135deg,#1565C0,#1E88E5);color:white;box-shadow:0 3px 10px rgba(21,101,192,.35)}
   .ops-btn.end{background:linear-gradient(135deg,#C62828,#E53935);color:white;box-shadow:0 3px 10px rgba(198,40,40,.35)}
-  .ops-btn .btn-label{font-size:1.05em}
-  .ops-btn .btn-time{font-size:.8em;opacity:.85;min-height:1.2em}
-  .ops-btn:disabled{opacity:.5;cursor:not-allowed}
-
-  /* カウンター */
-  .counter-box{background:var(--navy);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:14px}
-  .counter-label{font-size:.8em;opacity:.8;margin-bottom:4px}
+  .ops-btn .btn-label{font-size:1em}
+  .ops-btn .btn-time{font-size:.78em;opacity:.9;min-height:1.1em}
+  .ops-btn:disabled{opacity:.45;cursor:not-allowed}
+  .counter-box{background:var(--navy);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:12px}
+  .counter-label{font-size:.78em;opacity:.8;margin-bottom:4px}
   .counter-num{font-size:2.8em;font-weight:700;line-height:1}
-  .counter-unit{font-size:.85em;opacity:.8;margin-top:2px}
-  .counter-controls{display:flex;justify-content:center;gap:12px;margin-top:10px}
-  .counter-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
-    color:white;border-radius:8px;padding:6px 18px;font-size:1em;font-weight:700;
-    font-family:inherit;cursor:pointer}
+  .counter-unit{font-size:.82em;opacity:.8;margin-top:2px}
+  .counter-controls{display:flex;justify-content:center;gap:12px;margin-top:8px}
+  .counter-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:5px 16px;font-size:.95em;font-weight:700;font-family:inherit;cursor:pointer}
   .counter-btn:active{background:rgba(255,255,255,.25)}
 
-  /* 運搬履歴 */
-  .history-list{max-height:200px;overflow-y:auto}
-  .history-item{display:flex;align-items:center;gap:8px;padding:8px 10px;
-    border-bottom:1px solid var(--border);font-size:.82em}
+  /* 履歴 */
+  .history-wrap{margin-top:12px}
+  .history-label{font-size:.78em;font-weight:700;color:var(--sub);margin-bottom:6px}
+  .history-list{max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+  .history-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:.82em}
   .history-item:last-child{border-bottom:none}
-  .history-num{background:var(--blue);color:white;border-radius:50%;
-    width:22px;height:22px;display:flex;align-items:center;justify-content:center;
-    font-size:.78em;font-weight:700;flex-shrink:0}
-  .history-detail{flex:1;color:var(--sub)}
-  .history-time{color:var(--navy);font-weight:700}
+  .h-num{background:var(--blue);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:700;flex-shrink:0}
+  .h-detail{flex:1;color:var(--sub)}
+  .h-time{color:var(--navy);font-weight:700}
+  .h-delete{background:none;border:none;color:var(--gray);cursor:pointer;font-size:1.1em;padding:2px 4px}
+  .h-delete:active{color:var(--red)}
 
-  /* 送信ボタン */
+  /* 送信バー */
   .submit-bar{position:fixed;bottom:0;left:0;right:0;background:white;padding:12px 14px;box-shadow:0 -2px 12px rgba(0,0,0,.12);z-index:100}
-  .btn-submit{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#43A047);color:white;
-    border:none;border-radius:10px;font-size:1.05em;font-weight:700;font-family:inherit;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(46,125,50,.35)}
+  .btn-submit{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#43A047);color:white;border:none;border-radius:10px;font-size:1.05em;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 10px rgba(46,125,50,.35);transition:transform .1s}
+  .btn-submit:active{transform:scale(.99)}
   .btn-submit:disabled{opacity:.6;cursor:not-allowed}
   .submit-hint{font-size:.73em;color:var(--sub);text-align:center;margin-top:5px}
 
   /* モーダル */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-end;justify-content:center}
   .modal-bg.open{display:flex}
-  .modal{background:white;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:22px 18px 30px;max-height:80vh;overflow-y:auto;animation:slideUp .25s ease}
+  .modal{background:white;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:22px 18px 30px;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .modal h2{font-size:1.05em;color:var(--navy);margin-bottom:12px}
-  .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .preview-table{width:100%;border-collapse:collapse;font-size:.82em;margin-bottom:12px}
+  .preview-table th{background:var(--navy);color:white;padding:6px 8px;text-align:left}
+  .preview-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+  .preview-table tr:nth-child(even) td{background:var(--lblue)}
+  .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .btn-cancel{padding:12px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:inherit;font-size:.95em;font-weight:700;color:var(--sub);cursor:pointer}
   .btn-confirm{padding:12px;border:none;border-radius:8px;background:var(--green);color:white;font-family:inherit;font-size:.95em;font-weight:700;cursor:pointer}
-  .preview-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.85em}
-  .preview-row:last-child{border-bottom:none}
-  .preview-key{color:var(--sub);font-weight:700}
-  .preview-val{color:var(--navy);font-weight:700;text-align:right;max-width:60%}
+  .sending-txt{text-align:center;padding:10px;font-size:.88em;color:var(--blue);display:none}
+  .sending-txt.visible{display:block}
 
-  /* 完了画面 */
+  /* 完了 */
   .done-screen{display:none;position:fixed;inset:0;background:var(--green);color:white;z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
   .done-screen.open{display:flex}
   .done-icon{font-size:4.5em;margin-bottom:14px}
   .done-screen h2{font-size:1.5em;margin-bottom:6px}
   .done-screen p{opacity:.85;font-size:.9em;line-height:1.7;margin-bottom:24px;white-space:pre-wrap}
   .btn-next{background:white;color:var(--green);border:none;border-radius:10px;padding:13px 28px;font-family:inherit;font-size:1em;font-weight:700;cursor:pointer}
-
-  .sending-txt{text-align:center;padding:10px;font-size:.88em;color:var(--blue);display:none}
-  .sending-txt.visible{display:block}
 </style>
 </head>
 <body>
@@ -178,21 +155,15 @@
 <div class="section">
   <div class="sec-hdr">✅ 出発前点検</div>
   <div class="sec-body" style="padding:0">
-    <table class="inspection-table">
+    <table class="insp-table">
       <thead>
-        <tr>
-          <th>点検項目</th>
-          <th>○</th>
-          <th>×</th>
-          <th>該当なし</th>
-        </tr>
+        <tr><th>点検項目</th><th>○</th><th>×</th><th>該当なし</th></tr>
       </thead>
       <tbody id="insp-tbody"></tbody>
     </table>
-    <!-- その他自由入力 -->
-    <div style="padding:10px 14px 12px" id="insp-other-wrap" style="display:none">
-      <label style="font-size:.78em;font-weight:700;color:var(--sub);margin-bottom:4px;display:block">12. その他（内容を入力）</label>
-      <textarea id="insp-other-text" rows="2" placeholder="気になる点があれば入力してください" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.95em;font-family:inherit;outline:none;resize:vertical"></textarea>
+    <div id="insp-other-wrap" style="display:none;padding:10px 14px 12px">
+      <label style="font-size:.78em;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">12. その他（内容を入力）</label>
+      <textarea id="insp-other-text" rows="2" placeholder="気になる点を入力してください"></textarea>
     </div>
   </div>
 </div>
@@ -205,14 +176,9 @@
       <label>積荷の種類<span class="req">*</span></label>
       <select id="cargo" onchange="handleOther(this,'cargo-other')">
         <option value="">選択してください</option>
-        <option>対策ズリ</option>
-        <option>無対策ズリ</option>
-        <option>吸着土</option>
-        <option>破砕ズリ</option>
-        <option>水銀ズリ</option>
-        <option>砕石</option>
-        <option>雪</option>
-        <option value="その他">その他</option>
+        <option>対策ズリ</option><option>無対策ズリ</option><option>吸着土</option>
+        <option>破砕ズリ</option><option>水銀ズリ</option><option>砕石</option>
+        <option>雪</option><option value="その他">その他</option>
       </select>
       <input type="text" id="cargo-other" class="other-input" placeholder="積荷の種類を入力">
     </div>
@@ -221,13 +187,9 @@
         <label>積込箇所<span class="req">*</span></label>
         <select id="load-from" onchange="handleOther(this,'load-from-other')">
           <option value="">選択</option>
-          <option>D地区</option>
-          <option>C地区</option>
-          <option>B地区</option>
-          <option>第二仮置き場</option>
-          <option>桂岡地区</option>
-          <option>天神地区</option>
-          <option>石倉地区</option>
+          <option>D地区</option><option>C地区</option><option>B地区</option>
+          <option>第二仮置き場</option><option>桂岡地区</option>
+          <option>天神地区</option><option>石倉地区</option>
           <option value="その他">その他</option>
         </select>
         <input type="text" id="load-from-other" class="other-input" placeholder="場所を入力">
@@ -236,13 +198,9 @@
         <label>荷卸箇所<span class="req">*</span></label>
         <select id="load-to" onchange="handleOther(this,'load-to-other')">
           <option value="">選択</option>
-          <option>D地区</option>
-          <option>C地区</option>
-          <option>B地区</option>
-          <option>第二仮置き場</option>
-          <option>桂岡地区</option>
-          <option>天神地区</option>
-          <option>石倉地区</option>
+          <option>D地区</option><option>C地区</option><option>B地区</option>
+          <option>第二仮置き場</option><option>桂岡地区</option>
+          <option>天神地区</option><option>石倉地区</option>
           <option value="その他">その他</option>
         </select>
         <input type="text" id="load-to-other" class="other-input" placeholder="場所を入力">
@@ -251,54 +209,56 @@
   </div>
 </div>
 
-<!-- 積込・荷卸操作 -->
-<div class="ops-section">
-  <div class="sec-hdr">🚛 運搬操作</div>
-  <div class="ops-body">
+<!-- 運搬操作 -->
+<div class="section">
+  <div class="sec-hdr">
+    🚛 運搬記録
+    <span class="badge" id="trip-badge">0発</span>
+  </div>
+  <div class="sec-body">
     <div class="warning-txt">⚠️ 走行中は操作しないでください</div>
 
-    <!-- カウンター -->
+    <div class="ops-grid">
+      <button class="ops-btn start" id="btn-start" onclick="tapStart()">
+        <span class="btn-label">🟦 積込開始</span>
+        <span class="btn-time" id="start-time">タップして記録</span>
+      </button>
+      <button class="ops-btn end" id="btn-end" onclick="tapEnd()" disabled>
+        <span class="btn-label">🟥 荷卸終了</span>
+        <span class="btn-time" id="end-time">積込開始後に押す</span>
+      </button>
+    </div>
+
+    <div class="warning-txt" style="margin-bottom:12px">⚠️ 走行中は操作しないでください</div>
+
     <div class="counter-box">
       <div class="counter-label">本日の運搬回数</div>
       <div class="counter-num" id="counter-num">0</div>
       <div class="counter-unit">発</div>
       <div class="counter-controls">
         <button class="counter-btn" onclick="adjustCounter(-1)">－ 修正</button>
-        <button class="counter-btn" onclick="adjustCounter(1)">＋ 追加</button>
+        <button class="counter-btn" onclick="adjustCounter(1)">＋ 手動追加</button>
       </div>
     </div>
 
-    <!-- 積込・荷卸ボタン -->
-    <div class="ops-grid">
-      <div>
-        <button class="ops-btn start" id="btn-start" onclick="tapStart()">
-          <span class="btn-label">🟦 積込開始</span>
-          <span class="btn-time" id="start-time">－</span>
-        </button>
-      </div>
-      <div>
-        <button class="ops-btn end" id="btn-end" onclick="tapEnd()" disabled>
-          <span class="btn-label">🟥 荷卸終了</span>
-          <span class="btn-time" id="end-time">－</span>
-        </button>
-      </div>
-    </div>
-    <div class="warning-txt" style="margin-bottom:0">⚠️ 走行中は操作しないでください</div>
-
-    <!-- 運搬履歴 -->
-    <div style="margin-top:14px">
-      <div style="font-size:.8em;font-weight:700;color:var(--sub);margin-bottom:6px">運搬履歴</div>
+    <div class="history-wrap">
+      <div class="history-label">運搬履歴</div>
       <div class="history-list" id="history-list">
         <div style="text-align:center;color:var(--gray);font-size:.82em;padding:12px">まだ記録がありません</div>
       </div>
+    </div>
+
+    <div class="field" style="margin-top:12px">
+      <label>備考（任意）</label>
+      <textarea id="note" rows="2" placeholder="特記事項があれば入力"></textarea>
     </div>
   </div>
 </div>
 
 <!-- 送信バー -->
 <div class="submit-bar">
-  <button class="btn-submit" id="submit-btn" onclick="showPreview()">📤 この発を送信する</button>
-  <div class="submit-hint">積込開始→荷卸終了後に1発ずつ送信します</div>
+  <button class="btn-submit" onclick="showPreview()">📤 本日分をまとめて送信</button>
+  <div class="submit-hint">作業終了後に1回送信してください</div>
 </div>
 
 <!-- 確認モーダル -->
@@ -317,133 +277,97 @@
 <!-- 完了画面 -->
 <div class="done-screen" id="done-screen">
   <div class="done-icon">✅</div>
-  <h2 id="done-title">送信完了！</h2>
+  <h2>送信完了！</h2>
   <p id="done-message"></p>
-  <button class="btn-next" onclick="nextTrip()">🚛 次の発を入力する</button>
+  <button class="btn-next" onclick="resetForm()">📋 新しい日報を入力</button>
 </div>
 
 <script>
-// ===========================
-// Google Apps Script URL（運搬管理専用シート用・後で設定）
-// ===========================
-const GAS_URL = 'YOUR_GAS_URL_HERE'; // ← 後でURLを設定
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoR44oaeXjSaaGNf2ycK-xhyYEMJsz8wsQ_5BthZCy2T3d13wtXbOXwwW7z3ge99g2/exec';
 
-// ===========================
-// 点検項目
-// ===========================
+// 点検項目（番号7は欠番）
 const INSP_ITEMS = [
-  'タイヤの空気圧、き裂、損傷の有無',
-  'エンジンオイル量、油漏れの有無',
-  '冷却水は規定量入っているか、液漏れはないか',
-  '警報は鳴るか、バックブザーは鳴るか',
-  '始動、排気色は良いか、異常音はないか',
-  'ペダルの踏代は良いか、遊びは適当か',
-  '点灯は良いか、点滅は良いか',
-  'バックミラーの写影は良いか、破損はないか',
-  'ダンプ装置の作動は良いか、油漏れはないか',
-  '車検証は有るか、運転免許証は携帯しているか',
+  {num:1,  text:'タイヤの空気圧、き裂、損傷の有無'},
+  {num:2,  text:'エンジンオイル量、油漏れの有無'},
+  {num:3,  text:'冷却水は規定量入っているか、液漏れはないか'},
+  {num:4,  text:'警報は鳴るか、バックブザーは鳴るか'},
+  {num:5,  text:'始動、排気色は良いか、異常音はないか'},
+  {num:6,  text:'ペダルの踏代は良いか、遊びは適当か'},
+  {num:8,  text:'点灯は良いか、点滅は良いか'},
+  {num:9,  text:'バックミラーの写影は良いか、破損はないか'},
+  {num:10, text:'ダンプ装置の作動は良いか、油漏れはないか'},
+  {num:11, text:'車検証は有るか、運転免許証は携帯しているか'},
 ];
 
-// 点検結果保存
-let inspResults = {};
-INSP_ITEMS.forEach((_, i) => inspResults[i] = '');
-inspResults['other'] = '';
-inspResults['other_text'] = '';
-
-// 運搬データ
-let tripCounter  = 0;
+let inspResults  = {}; // {0:'○', 1:'×', ...}
+let tripCount    = 0;
+let tripHistory  = []; // [{start, end}]
 let currentStart = '';
-let currentEnd   = '';
-let history      = [];
-let startLocked  = false; // 積込開始済みフラグ
+let startLocked  = false;
 
 // ===========================
 // 初期化
 // ===========================
 window.onload = () => {
-  // 今日の日付
   const t = new Date();
   document.getElementById('date').value =
     `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-
-  // 点検テーブル生成
-  const tbody = document.getElementById('insp-tbody');
-  INSP_ITEMS.forEach((item, i) => {
-    const num = i < 5 ? i+1 : i+2; // 7番欠番のため
-    tbody.innerHTML += `
-    <tr>
-      <td><span class="insp-num">${num}.</span>${item}</td>
-      <td>
-        <div class="insp-radio">
-          <input type="radio" name="insp-${i}" id="insp-${i}-ok" value="○" onchange="saveInsp(${i},this.value)">
-          <label for="insp-${i}-ok" class="ok">○</label>
-        </div>
-      </td>
-      <td>
-        <div class="insp-radio">
-          <input type="radio" name="insp-${i}" id="insp-${i}-ng" value="×" onchange="saveInsp(${i},this.value)">
-          <label for="insp-${i}-ng" class="ng">×</label>
-        </div>
-      </td>
-      <td>
-        <div class="insp-radio">
-          <input type="radio" name="insp-${i}" id="insp-${i}-na" value="該当なし" onchange="saveInsp(${i},this.value)">
-          <label for="insp-${i}-na" class="na">－</label>
-        </div>
-      </td>
-    </tr>`;
-  });
-
-  // 12番（その他）
-  tbody.innerHTML += `
-  <tr>
-    <td><span class="insp-num">12.</span>その他</td>
-    <td>
-      <div class="insp-radio">
-        <input type="radio" name="insp-other" id="insp-other-ok" value="○" onchange="saveInspOther('○')">
-        <label for="insp-other-ok" class="ok">○</label>
-      </div>
-    </td>
-    <td>
-      <div class="insp-radio">
-        <input type="radio" name="insp-other" id="insp-other-ng" value="×" onchange="saveInspOther('×')">
-        <label for="insp-other-ng" class="ng">×</label>
-      </div>
-    </td>
-    <td>
-      <div class="insp-radio">
-        <input type="radio" name="insp-other" id="insp-other-na" value="該当なし" onchange="saveInspOther('該当なし')">
-        <label for="insp-other-na" class="na">－</label>
-      </div>
-    </td>
-  </tr>`;
+  buildInspTable();
 };
 
-function saveInsp(idx, val) { inspResults[idx] = val; }
-
-function saveInspOther(val) {
-  inspResults['other'] = val;
-  const wrap = document.getElementById('insp-other-wrap');
-  if (val === '○' || val === '×') {
-    wrap.style.display = 'block';
-  } else {
-    wrap.style.display = 'none';
-    inspResults['other_text'] = '';
-    document.getElementById('insp-other-text').value = '';
-  }
+function buildInspTable() {
+  const tbody = document.getElementById('insp-tbody');
+  INSP_ITEMS.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="insp-num">${item.num}.</span>${item.text}</td>
+      <td><div class="insp-btns"><button class="insp-btn" onclick="setInsp(${i},'○',this)">○</button></div></td>
+      <td><div class="insp-btns"><button class="insp-btn" onclick="setInsp(${i},'×',this)">×</button></div></td>
+      <td><div class="insp-btns"><button class="insp-btn" onclick="setInsp(${i},'該当なし',this)">－</button></div></td>`;
+    tbody.appendChild(tr);
+  });
+  // 12. その他
+  const trOther = document.createElement('tr');
+  trOther.innerHTML = `
+    <td><span class="insp-num">12.</span>その他</td>
+    <td><div class="insp-btns"><button class="insp-btn" onclick="setInspOther('○',this)">○</button></div></td>
+    <td><div class="insp-btns"><button class="insp-btn" onclick="setInspOther('×',this)">×</button></div></td>
+    <td><div class="insp-btns"><button class="insp-btn" onclick="setInspOther('該当なし',this)">－</button></div></td>`;
+  tbody.appendChild(trOther);
 }
 
-document.addEventListener('input', e => {
-  if (e.target.id === 'insp-other-text') inspResults['other_text'] = e.target.value;
-});
+function setInsp(idx, val, btn) {
+  inspResults[idx] = val;
+  // 同行のボタンリセット
+  btn.closest('tr').querySelectorAll('.insp-btn').forEach(b => {
+    b.className = 'insp-btn';
+  });
+  btn.classList.add(val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na');
+}
+
+function setInspOther(val, btn) {
+  inspResults['other'] = val;
+  btn.closest('tr').querySelectorAll('.insp-btn').forEach(b => b.className='insp-btn');
+  btn.classList.add(val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na');
+  const wrap = document.getElementById('insp-other-wrap');
+  wrap.style.display = (val==='○'||val==='×') ? 'block' : 'none';
+  if (val==='該当なし') document.getElementById('insp-other-text').value='';
+}
 
 // ===========================
-// その他プルダウン制御
+// その他プルダウン
 // ===========================
 function handleOther(sel, otherId) {
   const el = document.getElementById(otherId);
-  el.classList.toggle('visible', sel.value === 'その他');
-  if (sel.value === 'その他') el.focus(); else el.value = '';
+  el.classList.toggle('visible', sel.value==='その他');
+  if (sel.value==='その他') el.focus(); else el.value='';
+}
+
+function getV(id) { return (document.getElementById(id)?.value||'').trim(); }
+
+function getSelOrOther(selId, otherId) {
+  const v = getV(selId);
+  return v==='その他' ? (getV(otherId)||'その他') : v;
 }
 
 // ===========================
@@ -455,72 +379,103 @@ function nowTime() {
 }
 
 function tapStart() {
-  if (startLocked) {
-    if (!confirm('積込開始時刻を上書きしますか？')) return;
-  }
+  if (startLocked && !confirm('積込開始時刻を上書きしますか？')) return;
   currentStart = nowTime();
-  currentEnd   = '';
   startLocked  = true;
   document.getElementById('start-time').textContent = currentStart;
-  document.getElementById('end-time').textContent   = '－';
+  document.getElementById('end-time').textContent   = '荷卸後に押す';
   document.getElementById('btn-end').disabled = false;
   document.getElementById('btn-start').style.opacity = '.7';
 }
 
 function tapEnd() {
   if (!currentStart) { alert('先に積込開始を押してください'); return; }
-  currentEnd = nowTime();
-  document.getElementById('end-time').textContent = currentEnd;
+  const endTime = nowTime();
+  document.getElementById('end-time').textContent = endTime;
+
+  // 履歴に追加
+  tripCount++;
+  tripHistory.push({start: currentStart, end: endTime});
+  document.getElementById('counter-num').textContent = tripCount;
+  document.getElementById('trip-badge').textContent  = `${tripCount}発`;
+
+  renderHistory();
+
+  // リセット（次の発へ）
+  currentStart = '';
+  startLocked  = false;
+  document.getElementById('start-time').textContent = 'タップして記録';
+  document.getElementById('end-time').textContent   = '積込開始後に押す';
+  document.getElementById('btn-end').disabled = true;
   document.getElementById('btn-start').style.opacity = '1';
 }
 
 function adjustCounter(delta) {
-  tripCounter = Math.max(0, tripCounter + delta);
-  document.getElementById('counter-num').textContent = tripCounter;
+  tripCount = Math.max(0, tripCount + delta);
+  document.getElementById('counter-num').textContent = tripCount;
+  document.getElementById('trip-badge').textContent  = `${tripCount}発`;
+  if (delta < 0 && tripHistory.length > 0) tripHistory.pop();
+  renderHistory();
+}
+
+function deleteTrip(idx) {
+  if (!confirm(`第${idx+1}発の記録を削除しますか？`)) return;
+  tripHistory.splice(idx, 1);
+  tripCount = Math.max(0, tripCount - 1);
+  document.getElementById('counter-num').textContent = tripCount;
+  document.getElementById('trip-badge').textContent  = `${tripCount}発`;
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (tripHistory.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:.82em;padding:12px">まだ記録がありません</div>';
+    return;
+  }
+  list.innerHTML = [...tripHistory].map((h, i) => `
+    <div class="history-item">
+      <div class="h-num">${i+1}</div>
+      <div class="h-detail">
+        <span class="h-time">${h.start} → ${h.end}</span>
+      </div>
+      <button class="h-delete" onclick="deleteTrip(${i})">×</button>
+    </div>`).join('');
 }
 
 // ===========================
-// バリデーション＆プレビュー
+// プレビュー
 // ===========================
-function getVal(id) { return document.getElementById(id)?.value.trim() || ''; }
-
-function getSelectOrOther(selId, otherId) {
-  const v = getVal(selId);
-  return v === 'その他' ? (getVal(otherId) || 'その他') : v;
-}
-
 function showPreview() {
-  if (!getVal('date'))       { alert('年月日を入力してください'); return; }
-  if (!getVal('company'))    { alert('所属会社を入力してください'); return; }
-  if (!getVal('vehicle'))    { alert('車両番号を入力してください'); return; }
-  if (!getVal('drivername')) { alert('氏名を入力してください'); return; }
-  if (!getVal('cargo'))      { alert('積荷の種類を選択してください'); return; }
-  if (!getVal('load-from'))  { alert('積込箇所を選択してください'); return; }
-  if (!getVal('load-to'))    { alert('荷卸箇所を選択してください'); return; }
-  if (!currentStart)         { alert('積込開始時刻を記録してください'); return; }
-  if (!currentEnd)           { alert('荷卸終了時刻を記録してください'); return; }
+  if (!getV('date'))       { alert('年月日を入力してください'); return; }
+  if (!getV('company'))    { alert('所属会社を入力してください'); return; }
+  if (!getV('vehicle'))    { alert('車両番号を入力してください'); return; }
+  if (!getV('drivername')) { alert('氏名を入力してください'); return; }
+  if (!getV('cargo'))      { alert('積荷の種類を選択してください'); return; }
+  if (!getV('load-from'))  { alert('積込箇所を選択してください'); return; }
+  if (!getV('load-to'))    { alert('荷卸箇所を選択してください'); return; }
+  if (tripCount === 0)     { alert('運搬記録がありません。\n積込開始→荷卸終了を記録してから送信してください'); return; }
 
-  const cargo   = getSelectOrOther('cargo',     'cargo-other');
-  const from    = getSelectOrOther('load-from', 'load-from-other');
-  const to      = getSelectOrOther('load-to',   'load-to-other');
+  const cargo = getSelOrOther('cargo','cargo-other');
+  const from  = getSelOrOther('load-from','load-from-other');
+  const to    = getSelOrOther('load-to','load-to-other');
+  const historyStr = tripHistory.map((h,i)=>`第${i+1}発 ${h.start}→${h.end}`).join('、');
 
-  let html = '';
-  const rows = [
-    ['年月日',    getVal('date')],
-    ['所属会社',  getVal('company')],
-    ['車両番号',  getVal('vehicle')],
-    ['氏名',      getVal('drivername')],
+  let html = `<table class="preview-table"><tbody>`;
+  [
+    ['年月日',    getV('date')],
+    ['所属会社',  getV('company')],
+    ['車両番号',  getV('vehicle')],
+    ['氏名',      getV('drivername')],
     ['積荷',      cargo],
     ['積込箇所',  from],
     ['荷卸箇所',  to],
-    ['積込開始',  currentStart],
-    ['荷卸終了',  currentEnd],
-    ['運搬回数',  `${tripCounter + 1}発目`],
-  ];
-  rows.forEach(([k,v]) => {
-    html += `<div class="preview-row"><span class="preview-key">${k}</span><span class="preview-val">${v}</span></div>`;
+    ['総運搬回数',`${tripCount}発`],
+    ['運搬履歴',  historyStr||'手動入力のみ'],
+  ].forEach(([k,v])=>{
+    html+=`<tr><td style="font-weight:700;color:var(--sub);width:40%">${k}</td><td style="color:var(--navy);font-weight:700">${v}</td></tr>`;
   });
-
+  html += '</tbody></table>';
   document.getElementById('preview-content').innerHTML = html;
   document.getElementById('modal-bg').classList.add('open');
 }
@@ -537,55 +492,39 @@ async function doSubmit() {
   const btnConfirm = document.getElementById('btn-confirm');
   const btnCancel  = document.getElementById('btn-cancel');
   const sendingTxt = document.getElementById('sending-txt');
-
   btnConfirm.disabled = true;
   btnCancel.disabled  = true;
   btnConfirm.textContent = '⏳ 送信中...';
   sendingTxt.classList.add('visible');
 
-  const cargo = getSelectOrOther('cargo',     'cargo-other');
-  const from  = getSelectOrOther('load-from', 'load-from-other');
-  const to    = getSelectOrOther('load-to',   'load-to-other');
-
-  // 点検結果を文字列に
-  const inspSummary = INSP_ITEMS.map((item, i) => {
-    const num = i < 5 ? i+1 : i+2;
-    return `${num}.${item}：${inspResults[i]||'未選択'}`;
-  }).join('\n') + `\n12.その他：${inspResults['other']||'未選択'}` +
-    (inspResults['other_text'] ? `（${inspResults['other_text']}）` : '');
-
-  tripCounter++;
-  document.getElementById('counter-num').textContent = tripCounter;
+  const cargo = getSelOrOther('cargo','cargo-other');
+  const from  = getSelOrOther('load-from','load-from-other');
+  const to    = getSelOrOther('load-to','load-to-other');
 
   const payload = {
-    date:        getVal('date'),
-    company:     getVal('company'),
-    vehicle:     getVal('vehicle'),
-    drivername:  getVal('drivername'),
+    type:       'transport',
+    date:       getV('date'),
+    company:    getV('company'),
+    vehicle:    getV('vehicle'),
+    drivername: getV('drivername'),
     cargo, from, to,
-    startTime:   currentStart,
-    endTime:     currentEnd,
-    tripCount:   tripCounter,
-    inspection:  inspSummary,
-    timestamp:   new Date().toISOString(),
+    tripCount,
+    tripHistory: tripHistory.map((h,i)=>`第${i+1}発 ${h.start}→${h.end}`).join(' / '),
+    insp0:  inspResults[0]||'',  insp1: inspResults[1]||'',
+    insp2:  inspResults[2]||'',  insp3: inspResults[3]||'',
+    insp4:  inspResults[4]||'',  insp5: inspResults[5]||'',
+    insp6:  inspResults[6]||'',  insp7: inspResults[7]||'',
+    insp8:  inspResults[8]||'',  insp9: inspResults[9]||'',
+    inspOther:     inspResults['other']||'',
+    inspOtherText: getV('insp-other-text'),
+    note:   getV('note'),
   };
 
   let ok = false;
   try {
-    await fetch(GAS_URL, {
-      method: 'POST',
-      mode:   'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:   JSON.stringify(payload),
-    });
+    await fetch(GAS_URL, {method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     ok = true;
-  } catch(e) {
-    console.error(e);
-  }
-
-  // 履歴に追加
-  history.push({ trip: tripCounter, start: currentStart, end: currentEnd, cargo, from, to });
-  renderHistory();
+  } catch(e) { console.error(e); }
 
   closeModal();
   sendingTxt.classList.remove('visible');
@@ -593,44 +532,34 @@ async function doSubmit() {
   btnCancel.disabled  = false;
   btnConfirm.textContent = '✅ 送信する';
 
-  document.getElementById('done-title').textContent = ok ? `第${tripCounter}発 送信完了！` : `第${tripCounter}発 記録完了`;
   document.getElementById('done-message').innerText =
-    `${getVal('date')} ${getVal('drivername')}\n${from} → ${to}（${cargo}）\n積込：${currentStart}　荷卸：${currentEnd}\n\n` +
-    (ok ? 'スプレッドシートに記録されました。' : '※送信に失敗しました。管理者にお知らせください。');
+    `${getV('date')}　${getV('drivername')}\n${from} → ${to}（${cargo}）\n総運搬回数：${tripCount}発\n\n` +
+    (ok ? 'スプレッドシートに記録されました。' : '※送信に失敗しました。\n管理者にお知らせください。');
   document.getElementById('done-screen').classList.add('open');
 }
 
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  if (history.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:.82em;padding:12px">まだ記録がありません</div>';
-    return;
-  }
-  list.innerHTML = [...history].reverse().map(h => `
-    <div class="history-item">
-      <div class="history-num">${h.trip}</div>
-      <div class="history-detail">
-        <div class="history-time">${h.start} → ${h.end}</div>
-        <div>${h.from} → ${h.to}（${h.cargo}）</div>
-      </div>
-    </div>`).join('');
-}
-
 // ===========================
-// 次の発へ（ドライバー情報・点検結果は保持）
+// リセット
 // ===========================
-function nextTrip() {
+function resetForm() {
   document.getElementById('done-screen').classList.remove('open');
-  // 積込・荷卸をリセット
-  currentStart = '';
-  currentEnd   = '';
-  startLocked  = false;
-  document.getElementById('start-time').textContent = '－';
-  document.getElementById('end-time').textContent   = '－';
+  ['company','vehicle','drivername','note','cargo-other','load-from-other','load-to-other','insp-other-text']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['cargo','load-from','load-to'].forEach(id => document.getElementById(id).value='');
+  ['cargo-other','load-from-other','load-to-other'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('insp-other-wrap').style.display='none';
+  document.querySelectorAll('.insp-btn').forEach(b=>b.className='insp-btn');
+  inspResults = {};
+  tripCount = 0; tripHistory = []; currentStart = ''; startLocked = false;
+  document.getElementById('counter-num').textContent = '0';
+  document.getElementById('trip-badge').textContent  = '0発';
+  document.getElementById('start-time').textContent  = 'タップして記録';
+  document.getElementById('end-time').textContent    = '積込開始後に押す';
   document.getElementById('btn-end').disabled = true;
   document.getElementById('btn-start').style.opacity = '1';
-  // 荷種・場所はそのまま（変わらない場合が多い）
-  window.scrollTo(0, 0);
+  renderHistory();
+  // 日付は今日のままにする
+  window.scrollTo(0,0);
 }
 </script>
 </body>
