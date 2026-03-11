@@ -139,7 +139,7 @@
 
 <div class="submit-bar">
   <button class="btn-submit" id="submit-btn" onclick="showPreview()">📤 確認して送信</button>
-  <div class="csv-hint">送信するとメール送信＋CSVダウンロードが同時に行われます</div>
+  <div class="csv-hint">送信するとメール送信＋Googleスプレッドシートへの自動記録が同時に行われます</div>
 </div>
 
 <!-- 確認モーダル -->
@@ -176,6 +176,11 @@
 const EMAILJS_SERVICE_ID  = 'service_t7q0klq';
 const EMAILJS_TEMPLATE_ID = 'template_pc0pkp3';
 const EMAILJS_PUBLIC_KEY  = 'VkI8OVz2fM2AkdhSJ';
+
+// ===========================
+// Google Apps Script URL
+// ===========================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoR44oaeXjSaaGNf2ycK-xhyYEMJsz8wsQ_5BthZCy2T3d13wtXbOXwwW7z3ge99g2/exec';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -469,10 +474,12 @@ async function submitData() {
   btnConfirm.textContent = '⏳ 送信中...';
   indicator.classList.add('visible');
 
-  let mailOk = false;
-  let mailError = '';
+  let mailOk  = false;
+  let sheetOk = false;
+  let mailError  = '';
+  let sheetError = '';
 
-  // ── EmailJS 送信
+  // ── ① EmailJS でメール送信
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       date:         data.date,
@@ -487,15 +494,19 @@ async function submitData() {
     console.error('EmailJS error:', e);
   }
 
-  // ── CSV ダウンロード（メール成否に関わらず実行）
-  const csvStr = buildCSV(data);
-  const blob   = new Blob([csvStr], {type:'text/csv;charset=utf-8;'});
-  const a      = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(blob),
-    download: `作業日報_${data.date}_${data.area}.csv`
-  });
-  a.click();
-  URL.revokeObjectURL(a.href);
+  // ── ② Google スプレッドシートに送信
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors', // CORSエラー回避（no-corsではレスポンス読めないが送信はされる）
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    sheetOk = true; // no-corsのため常にtrue扱い（エラーはcatchで検知）
+  } catch (e) {
+    sheetError = e?.message || JSON.stringify(e);
+    console.error('GAS error:', e);
+  }
 
   // ── 完了画面
   closeModal();
@@ -507,15 +518,13 @@ async function submitData() {
 
   const statusRow = document.getElementById('status-row');
   statusRow.innerHTML = `
-    <span class="status-badge ${mailOk ? 'ok' : 'ng'}">
-      ${mailOk ? '✅ メール送信成功' : '❌ メール送信失敗'}
-    </span>
-    <span class="status-badge ok">✅ CSV ダウンロード完了</span>
+    <span class="status-badge ${mailOk  ? 'ok' : 'ng'}">${mailOk  ? '✅ メール送信完了' : '❌ メール送信失敗'}</span>
+    <span class="status-badge ${sheetOk ? 'ok' : 'ng'}">${sheetOk ? '✅ スプレッドシート送信完了' : '❌ スプレッドシート送信失敗'}</span>
   `;
 
-  const msg = mailOk
-    ? `${data.date}（${data.area}）\n${data.rows.length}名分をメール送信しました。\nCSVもダウンロードされました。`
-    : `メール送信に失敗しました。\nCSVはダウンロードされています。\nExcelに手動で貼り付けてください。\n\nエラー：${mailError}`;
+  let msg = `${data.date}（${data.area}）\n${data.rows.length}名分を送信しました。\n\n`;
+  msg += mailOk  ? '📧 メール送信：成功\n' : `📧 メール送信：失敗\n　${mailError}\n`;
+  msg += sheetOk ? '📊 スプレッドシート：送信完了' : `📊 スプレッドシート：失敗\n　${sheetError}`;
 
   document.getElementById('done-message').innerText = msg;
   document.getElementById('done-screen').classList.add('open');
