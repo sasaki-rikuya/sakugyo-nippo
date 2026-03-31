@@ -299,21 +299,157 @@ const INSP_ITEMS = [
   {num:11, text:'車検証は有るか、運転免許証は携帯しているか'},
 ];
 
-let inspResults  = {}; // {0:'○', 1:'×', ...}
+let inspResults  = {};
 let tripCount    = 0;
-let tripHistory  = []; // [{start, end}]
+let tripHistory  = [];
 let currentStart = '';
 let startLocked  = false;
+
+const SAVE_KEY = 'unban_draft';
+
+// ===========================
+// 自動保存
+// ===========================
+function saveToLocal() {
+  const draft = {
+    date:        getV('date'),
+    company:     getV('company'),
+    vehicle:     getV('vehicle'),
+    drivername:  getV('drivername'),
+    cargo:       getV('cargo'),
+    cargoOther:  getV('cargo-other'),
+    loadFrom:    getV('load-from'),
+    loadFromOther: getV('load-from-other'),
+    loadTo:      getV('load-to'),
+    loadToOther: getV('load-to-other'),
+    note:        getV('note'),
+    inspResults,
+    inspOtherText: getV('insp-other-text'),
+    tripCount,
+    tripHistory,
+    currentStart,
+    startLocked,
+    savedAt: new Date().toISOString(),
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(draft)); } catch(e) {}
+}
+
+function clearLocal() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+
+function setupAutoSave() {
+  document.querySelectorAll('input,select,textarea').forEach(el => {
+    el.addEventListener('change', saveToLocal);
+    el.addEventListener('input',  saveToLocal);
+  });
+}
 
 // ===========================
 // 初期化
 // ===========================
 window.onload = () => {
   const t = new Date();
-  document.getElementById('date').value =
-    `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  const today = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  document.getElementById('date').value = today;
   buildInspTable();
+
+  // 保存データがあれば復元確認
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const draft = JSON.parse(raw);
+      // 今日のデータだけ復元対象
+      if (draft.date === today && (draft.tripCount > 0 || draft.company)) {
+        const savedTime = draft.savedAt
+          ? new Date(draft.savedAt).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'})
+          : '';
+        const msg = '前回の入力データが見つかりました。\n\n'
+          + '保存時刻：' + savedTime + '\n'
+          + '運搬回数：' + draft.tripCount + '発\n'
+          + 'ドライバー：' + (draft.drivername || '（未入力）') + '\n\n'
+          + '続きから再開しますか？';
+        if (confirm(msg)) {
+          restoreFromDraft(draft);
+          return;
+        } else {
+          clearLocal();
+        }
+      } else {
+        clearLocal();
+      }
+    }
+  } catch(e) {}
+
+  setupAutoSave();
 };
+
+function restoreFromDraft(d) {
+  const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.value = val; };
+  set('date', d.date); set('company', d.company); set('vehicle', d.vehicle);
+  set('drivername', d.drivername); set('note', d.note);
+  set('cargo', d.cargo); set('load-from', d.loadFrom); set('load-to', d.loadTo);
+
+  if (d.cargo === 'その他' && d.cargoOther) {
+    set('cargo-other', d.cargoOther);
+    document.getElementById('cargo-other').classList.add('visible');
+  }
+  if (d.loadFrom === 'その他' && d.loadFromOther) {
+    set('load-from-other', d.loadFromOther);
+    document.getElementById('load-from-other').classList.add('visible');
+  }
+  if (d.loadTo === 'その他' && d.loadToOther) {
+    set('load-to-other', d.loadToOther);
+    document.getElementById('load-to-other').classList.add('visible');
+  }
+
+  // 点検結果復元
+  inspResults = d.inspResults || {};
+  const rows = document.getElementById('insp-tbody').querySelectorAll('tr');
+  Object.entries(inspResults).forEach(([idx, val]) => {
+    if (!val) return;
+    const cls = val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na';
+    const btnIdx = val==='○'?0:val==='×'?1:2;
+    if (idx === 'other') {
+      const lastRow = rows[rows.length - 1];
+      if (lastRow) {
+        const btns = lastRow.querySelectorAll('.insp-btn');
+        btns.forEach(b => b.className='insp-btn');
+        if (btns[btnIdx]) btns[btnIdx].classList.add(cls);
+        if (val==='○'||val==='×') {
+          document.getElementById('insp-other-wrap').style.display = 'block';
+          if (d.inspOtherText) document.getElementById('insp-other-text').value = d.inspOtherText;
+        }
+      }
+    } else {
+      const row = rows[parseInt(idx)];
+      if (row) {
+        const btns = row.querySelectorAll('.insp-btn');
+        btns.forEach(b => b.className='insp-btn');
+        if (btns[btnIdx]) btns[btnIdx].classList.add(cls);
+      }
+    }
+  });
+
+  // 運搬データ復元
+  tripCount    = d.tripCount    || 0;
+  tripHistory  = d.tripHistory  || [];
+  currentStart = d.currentStart || '';
+  startLocked  = d.startLocked  || false;
+
+  document.getElementById('counter-num').textContent = tripCount;
+  document.getElementById('trip-badge').textContent  = tripCount + '発';
+
+  if (currentStart) {
+    document.getElementById('start-time').textContent = currentStart;
+    document.getElementById('end-time').textContent   = '荷卸後に押す';
+    document.getElementById('btn-end').disabled = false;
+    document.getElementById('btn-start').style.opacity = '.7';
+  }
+
+  renderHistory();
+  setupAutoSave();
+}
 
 function buildInspTable() {
   const tbody = document.getElementById('insp-tbody');
@@ -338,11 +474,9 @@ function buildInspTable() {
 
 function setInsp(idx, val, btn) {
   inspResults[idx] = val;
-  // 同行のボタンリセット
-  btn.closest('tr').querySelectorAll('.insp-btn').forEach(b => {
-    b.className = 'insp-btn';
-  });
+  btn.closest('tr').querySelectorAll('.insp-btn').forEach(b => { b.className = 'insp-btn'; });
   btn.classList.add(val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na');
+  saveToLocal();
 }
 
 function setInspOther(val, btn) {
@@ -352,6 +486,7 @@ function setInspOther(val, btn) {
   const wrap = document.getElementById('insp-other-wrap');
   wrap.style.display = (val==='○'||val==='×') ? 'block' : 'none';
   if (val==='該当なし') document.getElementById('insp-other-text').value='';
+  saveToLocal();
 }
 
 // ===========================
@@ -386,6 +521,7 @@ function tapStart() {
   document.getElementById('end-time').textContent   = '荷卸後に押す';
   document.getElementById('btn-end').disabled = false;
   document.getElementById('btn-start').style.opacity = '.7';
+  saveToLocal();
 }
 
 function tapEnd() {
@@ -408,6 +544,7 @@ function tapEnd() {
   document.getElementById('end-time').textContent   = '積込開始後に押す';
   document.getElementById('btn-end').disabled = true;
   document.getElementById('btn-start').style.opacity = '1';
+  saveToLocal();
 }
 
 function adjustCounter(delta) {
@@ -416,6 +553,7 @@ function adjustCounter(delta) {
   document.getElementById('trip-badge').textContent  = `${tripCount}発`;
   if (delta < 0 && tripHistory.length > 0) tripHistory.pop();
   renderHistory();
+  saveToLocal();
 }
 
 function deleteTrip(idx) {
@@ -425,6 +563,7 @@ function deleteTrip(idx) {
   document.getElementById('counter-num').textContent = tripCount;
   document.getElementById('trip-badge').textContent  = `${tripCount}発`;
   renderHistory();
+  saveToLocal();
 }
 
 function renderHistory() {
@@ -535,6 +674,7 @@ async function doSubmit() {
   document.getElementById('done-message').innerText =
     `${getV('date')}　${getV('drivername')}\n${from} → ${to}（${cargo}）\n総運搬回数：${tripCount}発\n\n` +
     (ok ? 'スプレッドシートに記録されました。' : '※送信に失敗しました。\n管理者にお知らせください。');
+  if (ok) clearLocal();
   document.getElementById('done-screen').classList.add('open');
 }
 
@@ -542,6 +682,7 @@ async function doSubmit() {
 // リセット
 // ===========================
 function resetForm() {
+  clearLocal();
   document.getElementById('done-screen').classList.remove('open');
   ['company','vehicle','drivername','note','cargo-other','load-from-other','load-to-other','insp-other-text']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
