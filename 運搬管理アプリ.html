@@ -178,7 +178,7 @@
         <option value="">選択してください</option>
         <option>対策ズリ</option><option>無対策ズリ</option><option>吸着土</option>
         <option>破砕ズリ</option><option>水銀ズリ</option><option>砕石</option>
-        <option>雪</option><option value="その他">その他</option>
+        <option>雪</option><option>覆土材</option><option value="その他">その他</option>
       </select>
       <input type="text" id="cargo-other" class="other-input" placeholder="積荷の種類を入力">
     </div>
@@ -190,6 +190,7 @@
           <option>D地区</option><option>C地区</option><option>B地区</option>
           <option>第二仮置き場</option><option>桂岡地区</option>
           <option>天神地区</option><option>石倉地区</option>
+          <option>昭和建材</option>
           <option value="その他">その他</option>
         </select>
         <input type="text" id="load-from-other" class="other-input" placeholder="場所を入力">
@@ -201,10 +202,25 @@
           <option>D地区</option><option>C地区</option><option>B地区</option>
           <option>第二仮置き場</option><option>桂岡地区</option>
           <option>天神地区</option><option>石倉地区</option>
+          <option>昭和建材</option>
           <option value="その他">その他</option>
         </select>
         <input type="text" id="load-to-other" class="other-input" placeholder="場所を入力">
       </div>
+    </div>
+    <div class="field">
+      <label>稼働時間<span class="req">*</span></label>
+      <select id="working-hours">
+        <option value="">選択してください</option>
+        <option>1.0H</option><option>1.5H</option><option>2.0H</option>
+        <option>2.5H</option><option>3.0H</option><option>3.5H</option>
+        <option>4.0H</option><option>4.5H</option><option>5.0H</option>
+        <option>5.5H</option><option>6.0H</option><option>6.5H</option>
+        <option>7.0H</option><option>7.5H</option><option>8.0H</option>
+        <option>8.5H</option><option>9.0H</option><option>9.5H</option>
+        <option>10.0H</option><option>10.5H</option><option>11.0H</option>
+        <option>11.5H</option><option>12.0H</option>
+      </select>
     </div>
   </div>
 </div>
@@ -285,7 +301,6 @@
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoR44oaeXjSaaGNf2ycK-xhyYEMJsz8wsQ_5BthZCy2T3d13wtXbOXwwW7z3ge99g2/exec';
 
-// 点検項目（番号7は欠番）
 const INSP_ITEMS = [
   {num:1,  text:'タイヤの空気圧、き裂、損傷の有無'},
   {num:2,  text:'エンジンオイル量、油漏れの有無'},
@@ -312,17 +327,18 @@ const SAVE_KEY = 'unban_draft';
 // ===========================
 function saveToLocal() {
   const draft = {
-    date:        getV('date'),
-    company:     getV('company'),
-    vehicle:     getV('vehicle'),
-    drivername:  getV('drivername'),
-    cargo:       getV('cargo'),
-    cargoOther:  getV('cargo-other'),
-    loadFrom:    getV('load-from'),
+    date:          getV('date'),
+    company:       getV('company'),
+    vehicle:       getV('vehicle'),
+    drivername:    getV('drivername'),
+    cargo:         getV('cargo'),
+    cargoOther:    getV('cargo-other'),
+    loadFrom:      getV('load-from'),
     loadFromOther: getV('load-from-other'),
-    loadTo:      getV('load-to'),
-    loadToOther: getV('load-to-other'),
-    note:        getV('note'),
+    loadTo:        getV('load-to'),
+    loadToOther:   getV('load-to-other'),
+    workingHours:  getV('working-hours'),
+    note:          getV('note'),
     inspResults,
     inspOtherText: getV('insp-other-text'),
     tripCount,
@@ -354,12 +370,10 @@ window.onload = () => {
   document.getElementById('date').value = today;
   buildInspTable();
 
-  // 保存データがあれば復元確認
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const draft = JSON.parse(raw);
-      // 今日のデータだけ復元対象
       if (draft.date === today && (draft.tripCount > 0 || draft.company)) {
         const savedTime = draft.savedAt
           ? new Date(draft.savedAt).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'})
@@ -386,9 +400,15 @@ window.onload = () => {
 
 function restoreFromDraft(d) {
   const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.value = val; };
-  set('date', d.date); set('company', d.company); set('vehicle', d.vehicle);
-  set('drivername', d.drivername); set('note', d.note);
-  set('cargo', d.cargo); set('load-from', d.loadFrom); set('load-to', d.loadTo);
+  set('date', d.date);
+  set('company', d.company);
+  set('vehicle', d.vehicle);
+  set('drivername', d.drivername);
+  set('note', d.note);
+  set('working-hours', d.workingHours);
+  set('cargo', d.cargo);
+  set('load-from', d.loadFrom);
+  set('load-to', d.loadTo);
 
   if (d.cargo === 'その他' && d.cargoOther) {
     set('cargo-other', d.cargoOther);
@@ -403,12 +423,11 @@ function restoreFromDraft(d) {
     document.getElementById('load-to-other').classList.add('visible');
   }
 
-  // 点検結果復元
   inspResults = d.inspResults || {};
   const rows = document.getElementById('insp-tbody').querySelectorAll('tr');
   Object.entries(inspResults).forEach(([idx, val]) => {
     if (!val) return;
-    const cls = val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na';
+    const cls    = val==='○'?'selected-ok':val==='×'?'selected-ng':'selected-na';
     const btnIdx = val==='○'?0:val==='×'?1:2;
     if (idx === 'other') {
       const lastRow = rows[rows.length - 1];
@@ -431,7 +450,6 @@ function restoreFromDraft(d) {
     }
   });
 
-  // 運搬データ復元
   tripCount    = d.tripCount    || 0;
   tripHistory  = d.tripHistory  || [];
   currentStart = d.currentStart || '';
@@ -462,7 +480,6 @@ function buildInspTable() {
       <td><div class="insp-btns"><button class="insp-btn" onclick="setInsp(${i},'該当なし',this)">－</button></div></td>`;
     tbody.appendChild(tr);
   });
-  // 12. その他
   const trOther = document.createElement('tr');
   trOther.innerHTML = `
     <td><span class="insp-num">12.</span>その他</td>
@@ -529,7 +546,6 @@ function tapEnd() {
   const endTime = nowTime();
   document.getElementById('end-time').textContent = endTime;
 
-  // 履歴に追加
   tripCount++;
   tripHistory.push({start: currentStart, end: endTime});
   document.getElementById('counter-num').textContent = tripCount;
@@ -537,7 +553,6 @@ function tapEnd() {
 
   renderHistory();
 
-  // リセット（次の発へ）
   currentStart = '';
   startLocked  = false;
   document.getElementById('start-time').textContent = 'タップして記録';
@@ -586,14 +601,15 @@ function renderHistory() {
 // プレビュー
 // ===========================
 function showPreview() {
-  if (!getV('date'))       { alert('年月日を入力してください'); return; }
-  if (!getV('company'))    { alert('所属会社を入力してください'); return; }
-  if (!getV('vehicle'))    { alert('車両番号を入力してください'); return; }
-  if (!getV('drivername')) { alert('氏名を入力してください'); return; }
-  if (!getV('cargo'))      { alert('積荷の種類を選択してください'); return; }
-  if (!getV('load-from'))  { alert('積込箇所を選択してください'); return; }
-  if (!getV('load-to'))    { alert('荷卸箇所を選択してください'); return; }
-  if (tripCount === 0)     { alert('運搬記録がありません。\n積込開始→荷卸終了を記録してから送信してください'); return; }
+  if (!getV('date'))          { alert('年月日を入力してください'); return; }
+  if (!getV('company'))       { alert('所属会社を入力してください'); return; }
+  if (!getV('vehicle'))       { alert('車両番号を入力してください'); return; }
+  if (!getV('drivername'))    { alert('氏名を入力してください'); return; }
+  if (!getV('cargo'))         { alert('積荷の種類を選択してください'); return; }
+  if (!getV('load-from'))     { alert('積込箇所を選択してください'); return; }
+  if (!getV('load-to'))       { alert('荷卸箇所を選択してください'); return; }
+  if (!getV('working-hours')) { alert('稼働時間を選択してください'); return; }
+  if (tripCount === 0)        { alert('運搬記録がありません。\n積込開始→荷卸終了を記録してから送信してください'); return; }
 
   const cargo = getSelOrOther('cargo','cargo-other');
   const from  = getSelOrOther('load-from','load-from-other');
@@ -609,6 +625,7 @@ function showPreview() {
     ['積荷',      cargo],
     ['積込箇所',  from],
     ['荷卸箇所',  to],
+    ['稼働時間',  getV('working-hours')],
     ['総運搬回数',`${tripCount}発`],
     ['運搬履歴',  historyStr||'手動入力のみ'],
   ].forEach(([k,v])=>{
@@ -641,14 +658,15 @@ async function doSubmit() {
   const to    = getSelOrOther('load-to','load-to-other');
 
   const payload = {
-    type:       'transport',
-    date:       getV('date'),
-    company:    getV('company'),
-    vehicle:    getV('vehicle'),
-    drivername: getV('drivername'),
+    type:         'transport',
+    date:         getV('date'),
+    company:      getV('company'),
+    vehicle:      getV('vehicle'),
+    drivername:   getV('drivername'),
     cargo, from, to,
+    workingHours: getV('working-hours'),
     tripCount,
-    tripHistory: tripHistory.map((h,i)=>`第${i+1}発 ${h.start}→${h.end}`).join(' / '),
+    tripHistory:  tripHistory.map((h,i)=>`第${i+1}発 ${h.start}→${h.end}`).join(' / '),
     insp0:  inspResults[0]||'',  insp1: inspResults[1]||'',
     insp2:  inspResults[2]||'',  insp3: inspResults[3]||'',
     insp4:  inspResults[4]||'',  insp5: inspResults[5]||'',
@@ -656,7 +674,7 @@ async function doSubmit() {
     insp8:  inspResults[8]||'',  insp9: inspResults[9]||'',
     inspOther:     inspResults['other']||'',
     inspOtherText: getV('insp-other-text'),
-    note:   getV('note'),
+    note:          getV('note'),
   };
 
   let ok = false;
@@ -672,7 +690,7 @@ async function doSubmit() {
   btnConfirm.textContent = '✅ 送信する';
 
   document.getElementById('done-message').innerText =
-    `${getV('date')}　${getV('drivername')}\n${from} → ${to}（${cargo}）\n総運搬回数：${tripCount}発\n\n` +
+    `${getV('date')}　${getV('drivername')}\n${from} → ${to}（${cargo}）\n稼働時間：${getV('working-hours')}\n総運搬回数：${tripCount}発\n\n` +
     (ok ? 'スプレッドシートに記録されました。' : '※送信に失敗しました。\n管理者にお知らせください。');
   if (ok) clearLocal();
   document.getElementById('done-screen').classList.add('open');
@@ -686,7 +704,7 @@ function resetForm() {
   document.getElementById('done-screen').classList.remove('open');
   ['company','vehicle','drivername','note','cargo-other','load-from-other','load-to-other','insp-other-text']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['cargo','load-from','load-to'].forEach(id => document.getElementById(id).value='');
+  ['cargo','load-from','load-to','working-hours'].forEach(id => document.getElementById(id).value='');
   ['cargo-other','load-from-other','load-to-other'].forEach(id => document.getElementById(id).classList.remove('visible'));
   document.getElementById('insp-other-wrap').style.display='none';
   document.querySelectorAll('.insp-btn').forEach(b=>b.className='insp-btn');
@@ -699,7 +717,6 @@ function resetForm() {
   document.getElementById('btn-end').disabled = true;
   document.getElementById('btn-start').style.opacity = '1';
   renderHistory();
-  // 日付は今日のままにする
   window.scrollTo(0,0);
 }
 </script>
